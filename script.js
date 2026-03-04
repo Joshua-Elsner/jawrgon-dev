@@ -247,6 +247,7 @@ const backToMenuBtn = document.getElementById('back-to-menu-btn');
 
 //Go to leaderboard
 leaderboardBtn.addEventListener('click', () => {
+    renderLeaderboard(dummyPlayers);
     homeScreen.classList.add('hidden');
     leaderboardScreen.classList.remove('hidden');
 });
@@ -256,6 +257,48 @@ backToMenuBtn.addEventListener('click', () => {
     leaderboardScreen.classList.add('hidden');
     homeScreen.classList.remove('hidden');
 });
+
+//LEADERBOARD LOGIC ---------------------------
+
+const dummyPlayers = [
+    { name: "Elijah", points: 15, fishEaten: 2 },
+    { name: "Samantha", points: 42, fishEaten: 0 },
+    { name: "Clayton", points: 15, fishEaten: 3 },
+    { name: "Amelia", points: 30, fishEaten: 2 },
+    { name: "John", points: 5, fishEaten: 0 }
+];
+
+function renderLeaderboard(players) {
+    const tbody = document.getElementById('leaderboard-body');
+    tbody.innerHTML = '';
+
+    const sortedPlayers = [...players].sort((a, b) => {
+        if (b.fishEaten !== a.fishEaten) {
+            return b.fishEaten - a.fishEaten; //Sort by fish eaten
+        }
+        return b.points - a.points;           //Sort by points if fish are tied
+    });
+
+    sortedPlayers.forEach((player, index) => {
+        const rank = index + 1;
+        
+        let rankClass = '';
+        if (rank === 1) rankClass = 'rank-1';
+        if (rank === 2) rankClass = 'rank-2';
+        if (rank === 3) rankClass = 'rank-3';
+
+        const rowHTML = `
+            <tr>
+                <td class="${rankClass}">${rank}</td>
+                <td>${player.name}</td>
+                <td>${player.points}</td>
+                <td>${player.fishEaten}</td>
+            </tr>
+        `;
+        
+        tbody.insertAdjacentHTML('beforeend', rowHTML);
+    });
+}
 
 //Info Modals
 const challengeInfoBtn = document.getElementById('challenge-info-btn');
