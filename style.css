@@ -281,7 +281,7 @@ background-color: var(--color-absent) !important;
     height: 100%;
 }
 
-/*BUBBLE IDLE ANIMATION---------------------
+/*BUBBLE IDLE ANIMATION---------------------*/
 
 /*Define the floating motion */
 @keyframes idleBob {
@@ -309,3 +309,66 @@ background-color: var(--color-absent) !important;
 .board-row:nth-child(even) .tile { animation-duration: 3.4s; }
 .board-row:nth-child(3n) .tile { animation-duration: 2.7s; }
 .board-row:nth-child(5n) .tile { animation-duration: 3.1s; }
+
+
+/*LEADERBOARD SCREEN*/
+#leaderboard-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+}
+
+.leaderboard-container {
+    background-color: var(--color-tile-border);
+    border: 2px solid var(--color-accent);
+    border-radius: 12px;
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    margin-bottom: 30px;
+}
+
+#leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--color-text);
+}
+
+#leaderboard-table th {
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--color-accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#leaderboard-table td {
+    padding: 12px 0;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/*Top 3 ranks have special colors*/
+.rank-1 { color: #ffd700; }
+.rank-2 { color: #c0c0c0; }
+.rank-3 { color: #cd7f32; }
+
+.menu-return-btn {
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    background-color: transparent;
+    color: var(--color-accent);
+    border: 2px solid var(--color-accent);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.menu-return-btn:hover {
+    background-color: var(--color-accent);
+    color: var(--color-background);
+}

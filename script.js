@@ -184,6 +184,7 @@ submitNewWordBtn.addEventListener('click', () => {
 
 const homeScreen = document.getElementById('home-screen');
 const gameScreen = document.getElementById('game-screen');
+const leaderboardScreen = document.getElementById('leaderboard-screen');
 
 //Play game button
 const startGameBtn = document.getElementById('start-game-btn');
@@ -234,6 +235,22 @@ confirmStakeBtn.addEventListener('click', () => {
 
 cancelStakeBtn.addEventListener('click', () => {
     challengeStakeModal.classList.add('hidden');
+});
+
+// Leaderboard Navigation
+const leaderboardBtn = document.getElementById('leaderboard-btn');
+const backToMenuBtn = document.getElementById('back-to-menu-btn');
+
+//Go to leaderboard
+leaderboardBtn.addEventListener('click', () => {
+    homeScreen.classList.add('hidden');
+    leaderboardScreen.classList.remove('hidden');
+});
+
+//Return to main menu
+backToMenuBtn.addEventListener('click', () => {
+    leaderboardScreen.classList.add('hidden');
+    homeScreen.classList.remove('hidden');
 });
 
 //Info Modals
