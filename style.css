@@ -372,3 +372,24 @@ background-color: var(--color-absent) !important;
     background-color: var(--color-accent);
     color: var(--color-background);
 }
+
+.challenge-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+#challenge-btn {
+    flex: 1; 
+}
+
+#challenge-info-btn {
+    width: 55px; 
+    height: 55px; 
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
