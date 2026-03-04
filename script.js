@@ -324,11 +324,13 @@ function renderLeaderboard(players) {
     const tbody = document.getElementById('leaderboard-body');
     tbody.innerHTML = '';
 
-    const sortedPlayers = [...players].sort((a, b) => {
-        if (b.fishEaten !== a.fishEaten) {
-            return b.fishEaten - a.fishEaten; //Sort by fish eaten
-        }
-        return b.points - a.points;           //Sort by points if fish are tied
+const sortedPlayers = [...players].sort((a, b) => {
+        // Calculate the hidden total for each player 1 Fish = 5 Points
+        const totalA = a.points + (a.fishEaten * 5);
+        const totalB = b.points + (b.fishEaten * 5);
+
+        // Sort from highest to lowest
+        return totalB - totalA; 
     });
 
     sortedPlayers.forEach((player, index) => {
