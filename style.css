@@ -393,3 +393,8 @@ background-color: var(--color-absent) !important;
     align-items: center;
     flex-shrink: 0;
 }
+
+.key.absent {
+    background-color: #1e293b !important;
+    color: #475569 !important;
+}

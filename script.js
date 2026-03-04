@@ -109,6 +109,30 @@ function checkGuess() {
         tiles[i].classList.add(guessStatuses[i]);
     }
 
+    // Update the on-screen keyboard colors
+    for (let i = 0; i < 5; i++) {
+        const letter = currentGuess[i].toLowerCase();
+        const status = guessStatuses[i];
+        const keyElement = document.getElementById('key-' + letter);
+
+        if (keyElement) {
+            // If correct, do nothing
+            if (keyElement.classList.contains('correct')) {
+                continue;
+            }
+
+            if (keyElement.classList.contains('present')) {
+                if (status === 'correct') {
+                    keyElement.classList.remove('present');
+                    keyElement.classList.add('correct');
+                }
+                continue;
+            }
+
+            keyElement.classList.add(status);
+        }
+    }
+
     // Win check
     if (currentGuess === secretWord) {
         document.getElementById('win-modal').classList.remove('hidden');
@@ -157,6 +181,9 @@ tryAgainBtn.addEventListener('click', () => {
             tile.classList.remove('correct', 'present', 'absent');
         }
     }
+
+    //Clear colors from keys
+    document.querySelectorAll('.key').forEach(key => key.classList.remove('correct', 'present', 'absent'));
 });
 
 const submitNewWordBtn = document.getElementById('submit-new-word');
@@ -195,6 +222,9 @@ submitNewWordBtn.addEventListener('click', () => {
             tile.classList.remove('correct', 'present', 'absent'); 
         }
     }
+
+    // Clear all colors from the on-screen keyboard
+    document.querySelectorAll('.key').forEach(key => key.classList.remove('correct', 'present', 'absent'));
 
     // window.location.href = "leaderboard.html"; 
     console.log("TODO: Updating leaderboard will happen here.");
