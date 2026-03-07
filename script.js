@@ -28,9 +28,30 @@ dummyPlayers.forEach(player => {
     playerSelect.appendChild(option);
 });
 
-//Hide all rows except bottom
-for (let i = 1; i < 6; i++) {
-    rows[i].classList.add('row-collapsed');
+function setupBoard() {
+    const wager = parseInt(document.getElementById('stake-select').value);
+    currentRow = isDaredevil ? wager : 0; 
+    
+    currentTile = 0;
+    currentGuess = "";
+    isGameOver = false;
+
+    for (let r = 0; r < 6; r++) {
+        
+        if (r <= currentRow) {
+            rows[r].classList.remove('row-collapsed');
+        } else {
+            rows[r].classList.add('row-collapsed');
+        }
+        
+        for (let c = 0; c < 5; c++) {
+            const tile = rows[r].children[c];
+            tile.textContent = "";
+            tile.classList.remove('correct', 'present', 'absent');
+        }
+    }
+
+    document.querySelectorAll('.key').forEach(key => key.classList.remove('correct', 'present', 'absent'));
 }
 
 keys.forEach(key => {
@@ -157,8 +178,24 @@ function checkGuess() {
         document.getElementById('win-modal').classList.remove('hidden');
         isGameOver = true;
 
+        if (isDaredevil) {
+            const wager = parseInt(document.getElementById('stake-select').value);
+
+            const bonus = wager * 2;
+
+            console.log(`[API] DAREDEVIL SUCCESS! Awarding ${bonus} points to ${currentPlayer}`);
+            const winner = dummyPlayers.find(p => p.name === currentPlayer);
+            if (winner) {
+                winner.points += bonus;
+            }
+
+            // Turn Daredevil off for the next game
+            isDaredevil = false;
+            document.getElementById('challenge-btn').textContent = "Daredevil? NO";
+        }
+
         console.log(`[API] ${currentPlayer} guessed correctly and is the new Shark!`);
-        currentShark = currentPlayer; 
+        currentShark = currentPlayer;
         return;
     }
 
@@ -180,7 +217,7 @@ function checkGuess() {
 
     // Reveal next row of bubbles
     rows[currentRow].classList.remove('row-collapsed');
-} 
+}
 
 //UI and event listenestr
 
@@ -189,24 +226,10 @@ const tryAgainBtn = document.getElementById('try-again-btn');
 tryAgainBtn.addEventListener('click', () => {
     document.getElementById('lose-modal').classList.add('hidden');
 
-    currentRow = 0;
-    currentTile = 0;
-    currentGuess = "";
-    isGameOver = false;
+    isDaredevil = false;
+    document.getElementById('challenge-btn').textContent = "Daredevil? NO";
 
-    for (let r = 0; r < 6; r++) {
-        if (r > 0) {
-            rows[r].classList.add('row-collapsed');
-        }
-
-        for (let c = 0; c < 5; c++) {
-            const tile = rows[r].children[c];
-            tile.textContent = "";
-            tile.classList.remove('correct', 'present', 'absent');
-        }
-    }
-
-    document.querySelectorAll('.key').forEach(key => key.classList.remove('correct', 'present', 'absent'));
+    setupBoard();
 });
 
 const submitNewWordBtn = document.getElementById('submit-new-word');
@@ -221,31 +244,11 @@ submitNewWordBtn.addEventListener('click', () => {
     }
 
     secretWord = newWord;
-
-    document.getElementById('win-modal').classList.add('hidden');
     newWordInput.value = "";
 
-    currentRow = 0;
-    currentTile = 0;
-    currentGuess = "";
-    isGameOver = false;
-
-    for (let r = 0; r < 6; r++) {
-        if (r > 0) {
-            rows[r].classList.add('row-collapsed');
-        }
-
-        for (let c = 0; c < 5; c++) {
-            const tile = rows[r].children[c];
-            tile.textContent = "";
-            tile.classList.remove('correct', 'present', 'absent');
-        }
-    }
-
-    document.querySelectorAll('.key').forEach(key => key.classList.remove('correct', 'present', 'absent'));
+    setupBoard();
 
     renderLeaderboard(dummyPlayers);
-
     document.getElementById('win-modal').classList.add('hidden');
     document.getElementById('game-screen').classList.add('hidden');
     document.getElementById('leaderboard-screen').classList.remove('hidden');
@@ -259,6 +262,7 @@ const startGameBtn = document.getElementById('start-game-btn');
 startGameBtn.addEventListener('click', () => {
     homeScreen.classList.add('hidden');
     gameScreen.classList.remove('hidden');
+    setupBoard();
 });
 
 const chooseNameBtn = document.getElementById('choose-name-btn');
@@ -271,7 +275,7 @@ chooseNameBtn.addEventListener('click', () => {
 
 confirmPlayerBtn.addEventListener('click', () => {
     currentPlayer = playerSelect.value;
-    startGameBtn.textContent = `Play as ${currentPlayer}`; 
+    startGameBtn.textContent = `Play as ${currentPlayer}`;
     choosePlayerModal.classList.add('hidden');
 });
 
