@@ -15,6 +15,13 @@ let isGameOver = false;
 let currentPlayer = dummyPlayers[0].name; // Elijah
 let currentShark = dummyPlayers[1].name;  // Samantha
 
+function updateSharkDisplay() {
+    document.getElementById('home-shark-display').textContent = `Current Shark: ${currentShark}`;
+    document.getElementById('leaderboard-shark-display').textContent = `Current Shark: ${currentShark}`;
+}
+
+updateSharkDisplay();
+
 const rows = document.querySelectorAll('.board-row');
 const keys = document.querySelectorAll('.key');
 
@@ -196,6 +203,7 @@ function checkGuess() {
 
         console.log(`[API] ${currentPlayer} guessed correctly and is the new Shark!`);
         currentShark = currentPlayer;
+        updateSharkDisplay();
         return;
     }
 

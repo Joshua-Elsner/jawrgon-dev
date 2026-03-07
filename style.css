@@ -398,3 +398,11 @@ background-color: var(--color-absent) !important;
     background-color: #1e293b !important;
     color: #475569 !important;
 }
+
+.shark-display {
+    color: var(--color-present);
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
