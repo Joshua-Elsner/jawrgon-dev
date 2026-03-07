@@ -259,9 +259,23 @@ const gameScreen = document.getElementById('game-screen');
 const leaderboardScreen = document.getElementById('leaderboard-screen');
 
 const startGameBtn = document.getElementById('start-game-btn');
+
+// Starting the game from the main menu
 startGameBtn.addEventListener('click', () => {
     homeScreen.classList.add('hidden');
     gameScreen.classList.remove('hidden');
+    
+    // Deduct wager from player
+    if (isDaredevil) {
+        const wager = parseInt(document.getElementById('stake-select').value);
+        const player = dummyPlayers.find(p => p.name === currentPlayer);
+        
+        if (player) {
+            player.points -= wager; 
+            console.log(`[API] Deducted ${wager} points from ${currentPlayer}. Current balance: ${player.points}`);
+        }
+    }
+
     setupBoard();
 });
 
