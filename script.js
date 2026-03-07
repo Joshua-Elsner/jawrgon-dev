@@ -1,11 +1,32 @@
-let secretWord = "SHARK"; //Starts as shark initially
-let currentRow = 0; 
+const dummyPlayers = [
+    { name: "Elijah", points: 15, fishEaten: 2 },
+    { name: "Samantha", points: 42, fishEaten: 0 },
+    { name: "Clayton", points: 15, fishEaten: 3 },
+    { name: "Amelia", points: 30, fishEaten: 2 },
+    { name: "John", points: 5, fishEaten: 0 }
+];
+
+let secretWord = "SHARK";
+let currentRow = 0;
 let currentTile = 0;
 let currentGuess = "";
 let isGameOver = false;
 
+let currentPlayer = dummyPlayers[0].name; // Elijah
+let currentShark = dummyPlayers[1].name;  // Samantha
+
 const rows = document.querySelectorAll('.board-row');
-const keys = document.querySelectorAll('.key'); 
+const keys = document.querySelectorAll('.key');
+
+const playerSelect = document.getElementById('player-select');
+playerSelect.innerHTML = '';
+
+dummyPlayers.forEach(player => {
+    const option = document.createElement('option');
+    option.value = player.name;
+    option.textContent = player.name;
+    playerSelect.appendChild(option);
+});
 
 //Hide all rows except bottom
 for (let i = 1; i < 6; i++) {
@@ -19,7 +40,6 @@ keys.forEach(key => {
         const letter = key.textContent.trim();
 
         if (letter === "ENTER") {
-            //TODO: checking logic
             checkGuess();
         } else if (letter === "BACK") {
             deleteLetter();
@@ -40,12 +60,12 @@ document.addEventListener('keydown', (e) => {
 
     if (e.key === 'Backspace') {
         deleteLetter();
-        return; 
+        return;
     }
 
     //Regex for a single char
     const isLetter = /^[a-zA-Z]$/.test(e.key);
-    
+
     if (isLetter) {
         addLetter(e.key.toUpperCase());
     }
@@ -53,18 +73,18 @@ document.addEventListener('keydown', (e) => {
 
 function addLetter(letter) {
     if (currentTile < 5) {
-        const tile = rows[currentRow].children[currentTile]; 
-        tile.textContent = letter; 
-        currentGuess += letter; 
+        const tile = rows[currentRow].children[currentTile];
+        tile.textContent = letter;
+        currentGuess += letter;
         currentTile++;
     }
 }
 
 function deleteLetter() {
     if (currentTile > 0) {
-        currentTile--; 
+        currentTile--;
         const tile = rows[currentRow].children[currentTile];
-        tile.textContent = ""; 
+        tile.textContent = "";
         currentGuess = currentGuess.slice(0, -1);
     }
 }
@@ -94,9 +114,9 @@ function checkGuess() {
 
     //Find partial matches
     for (let i = 0; i < 5; i++) {
-        if (guessStatuses[i] !== 'correct') { 
+        if (guessStatuses[i] !== 'correct') {
             const letter = currentGuess[i];
-            
+
             //In word and we haven't run out
             if (secretLetterCounts[letter] > 0) {
                 guessStatuses[i] = 'present';
@@ -109,14 +129,13 @@ function checkGuess() {
         tiles[i].classList.add(guessStatuses[i]);
     }
 
-    // Update the on-screen keyboard colors
+    // Update the on screen keyboard colors
     for (let i = 0; i < 5; i++) {
         const letter = currentGuess[i].toLowerCase();
         const status = guessStatuses[i];
         const keyElement = document.getElementById('key-' + letter);
 
         if (keyElement) {
-            // If correct, do nothing
             if (keyElement.classList.contains('correct')) {
                 continue;
             }
@@ -137,9 +156,15 @@ function checkGuess() {
     if (currentGuess === secretWord) {
         document.getElementById('win-modal').classList.remove('hidden');
         isGameOver = true;
+
+        console.log(`[API] ${currentPlayer} guessed correctly and is the new Shark!`);
+        currentShark = currentPlayer; 
         return;
     }
-    
+
+    // Incorrect guess logic
+    awardSharkPoints(1);
+
     currentRow++;
     currentTile = 0;
     currentGuess = "";
@@ -148,15 +173,16 @@ function checkGuess() {
     if (currentRow === 6) {
         document.getElementById('lose-modal').classList.remove('hidden');
         isGameOver = true;
-        
-        //TODO: Add 1 to Fish Eaten on leaderboard
-        console.log("Shark gets a fish eaten");
+
+        awardSharkFish();
         return;
     }
 
     // Reveal next row of bubbles
     rows[currentRow].classList.remove('row-collapsed');
-}
+} 
+
+//UI and event listenestr
 
 const tryAgainBtn = document.getElementById('try-again-btn');
 
@@ -168,9 +194,7 @@ tryAgainBtn.addEventListener('click', () => {
     currentGuess = "";
     isGameOver = false;
 
-    //Clear all letters and colors from the bubbles
     for (let r = 0; r < 6; r++) {
-        //Hide all bubbles again
         if (r > 0) {
             rows[r].classList.add('row-collapsed');
         }
@@ -182,7 +206,6 @@ tryAgainBtn.addEventListener('click', () => {
         }
     }
 
-    //Clear colors from keys
     document.querySelectorAll('.key').forEach(key => key.classList.remove('correct', 'present', 'absent'));
 });
 
@@ -194,16 +217,13 @@ submitNewWordBtn.addEventListener('click', () => {
 
     if (newWord.length !== 5) {
         alert("Must be 5 letters");
-        return; 
+        return;
     }
 
-    console.log("TODO: Update databas with new word here.");
-    
-    secretWord = newWord; 
+    secretWord = newWord;
 
-    //Hide the Modal and clear the input box
     document.getElementById('win-modal').classList.add('hidden');
-    newWordInput.value = ""; 
+    newWordInput.value = "";
 
     currentRow = 0;
     currentTile = 0;
@@ -211,23 +231,19 @@ submitNewWordBtn.addEventListener('click', () => {
     isGameOver = false;
 
     for (let r = 0; r < 6; r++) {
-        //Hide all bubbles again
         if (r > 0) {
             rows[r].classList.add('row-collapsed');
         }
 
         for (let c = 0; c < 5; c++) {
             const tile = rows[r].children[c];
-            tile.textContent = ""; 
-            tile.classList.remove('correct', 'present', 'absent'); 
+            tile.textContent = "";
+            tile.classList.remove('correct', 'present', 'absent');
         }
     }
 
-    // Clear all colors from the on-screen keyboard
     document.querySelectorAll('.key').forEach(key => key.classList.remove('correct', 'present', 'absent'));
 
-    // window.location.href = "leaderboard.html"; 
-    console.log("TODO: Updating leaderboard will happen here.");
     renderLeaderboard(dummyPlayers);
 
     document.getElementById('win-modal').classList.add('hidden');
@@ -235,37 +251,30 @@ submitNewWordBtn.addEventListener('click', () => {
     document.getElementById('leaderboard-screen').classList.remove('hidden');
 });
 
-
-//-------------------Main menu and modals----------
-
 const homeScreen = document.getElementById('home-screen');
 const gameScreen = document.getElementById('game-screen');
 const leaderboardScreen = document.getElementById('leaderboard-screen');
 
-//Play game button
 const startGameBtn = document.getElementById('start-game-btn');
 startGameBtn.addEventListener('click', () => {
     homeScreen.classList.add('hidden');
     gameScreen.classList.remove('hidden');
 });
 
-//Choose player logic
 const chooseNameBtn = document.getElementById('choose-name-btn');
 const choosePlayerModal = document.getElementById('choose-player-modal');
 const confirmPlayerBtn = document.getElementById('confirm-player-btn');
-const playerSelect = document.getElementById('player-select');
 
 chooseNameBtn.addEventListener('click', () => {
     choosePlayerModal.classList.remove('hidden');
 });
 
 confirmPlayerBtn.addEventListener('click', () => {
-    const selectedPlayer = playerSelect.value;
-    startGameBtn.textContent = `Play as ${selectedPlayer}`; //Update text on button 
+    currentPlayer = playerSelect.value;
+    startGameBtn.textContent = `Play as ${currentPlayer}`; 
     choosePlayerModal.classList.add('hidden');
 });
 
-//Daredevil challenge logic
 const challengeBtn = document.getElementById('challenge-btn');
 const challengeStakeModal = document.getElementById('challenge-stake-modal');
 const confirmStakeBtn = document.getElementById('confirm-stake-btn');
@@ -293,68 +302,51 @@ cancelStakeBtn.addEventListener('click', () => {
     challengeStakeModal.classList.add('hidden');
 });
 
-// Leaderboard Navigation
 const leaderboardBtn = document.getElementById('leaderboard-btn');
 const backToMenuBtn = document.getElementById('back-to-menu-btn');
 
-//Go to leaderboard
 leaderboardBtn.addEventListener('click', () => {
     renderLeaderboard(dummyPlayers);
     homeScreen.classList.add('hidden');
     leaderboardScreen.classList.remove('hidden');
 });
 
-//Return to main menu
 backToMenuBtn.addEventListener('click', () => {
     leaderboardScreen.classList.add('hidden');
     homeScreen.classList.remove('hidden');
 });
 
-//LEADERBOARD LOGIC ---------------------------
-
-const dummyPlayers = [
-    { name: "Elijah", points: 15, fishEaten: 2 },
-    { name: "Samantha", points: 42, fishEaten: 0 },
-    { name: "Clayton", points: 15, fishEaten: 3 },
-    { name: "Amelia", points: 30, fishEaten: 2 },
-    { name: "John", points: 5, fishEaten: 0 }
-];
-
 function renderLeaderboard(players) {
     const tbody = document.getElementById('leaderboard-body');
     tbody.innerHTML = '';
 
-const sortedPlayers = [...players].sort((a, b) => {
-        // Calculate the hidden total for each player 1 Fish = 5 Points
+    const sortedPlayers = [...players].sort((a, b) => {
         const totalA = a.points + (a.fishEaten * 5);
         const totalB = b.points + (b.fishEaten * 5);
-
-        // Sort from highest to lowest
-        return totalB - totalA; 
+        return totalB - totalA;
     });
 
     sortedPlayers.forEach((player, index) => {
         const rank = index + 1;
-        
+
         let rankClass = '';
         if (rank === 1) rankClass = 'rank-1';
         if (rank === 2) rankClass = 'rank-2';
         if (rank === 3) rankClass = 'rank-3';
 
         const rowHTML = `
-            <tr>
-                <td class="${rankClass}">${rank}</td>
-                <td>${player.name}</td>
-                <td>${player.points}</td>
-                <td>${player.fishEaten}</td>
-            </tr>
-        `;
-        
+        <tr>
+            <td class="${rankClass}">${rank}</td>
+            <td>${player.name}</td>
+            <td>${player.points}</td>
+            <td>${player.fishEaten}</td>
+        </tr>
+    `;
+
         tbody.insertAdjacentHTML('beforeend', rowHTML);
     });
 }
 
-//Info Modals
 const challengeInfoBtn = document.getElementById('challenge-info-btn');
 const challengeInfoModal = document.getElementById('challenge-info-modal');
 const closeChallengeInfoBtn = document.getElementById('close-challenge-info-btn');
@@ -376,3 +368,20 @@ howToPlayBtn.addEventListener('click', () => {
 closeHowToPlayBtn.addEventListener('click', () => {
     howToPlayModal.classList.add('hidden');
 });
+
+//Dummy backend
+function awardSharkPoints(points) {
+    console.log(`[API] Awarding ${points} points to Shark (${currentShark})`);
+    const shark = dummyPlayers.find(p => p.name === currentShark);
+    if (shark) {
+        shark.points += points;
+    }
+}
+
+function awardSharkFish() {
+    console.log(`[API] Awarding 1 Fish Eaten to Shark (${currentShark})`);
+    const shark = dummyPlayers.find(p => p.name === currentShark);
+    if (shark) {
+        shark.fishEaten += 1;
+    }
+}
