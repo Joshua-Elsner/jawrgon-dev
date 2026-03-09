@@ -277,7 +277,6 @@ if (chooseNameBtn && playerDropdownList) {
         li.addEventListener('click', () => {
             currentPlayer = player.name;
             
-            chooseNameBtn.textContent = `Player: ${currentPlayer} ▼`;
             startGameBtn.textContent = `Play as ${currentPlayer}`;
             
             playerDropdownList.classList.add('hidden');
