@@ -25,31 +25,8 @@ updateSharkDisplay();
 const rows = document.querySelectorAll('.board-row');
 const keys = document.querySelectorAll('.key');
 
-let isDaredevil = false;
-let currentWager = 0;
-const ddDisplay = document.getElementById('dd-display');
-
-function updateDaredevilUI() {
-    isDaredevil = currentWager > 0;
-    
-    if (ddDisplay) {
-        if (isDaredevil) {
-            ddDisplay.textContent = `Daredevil: ${currentWager} Pt${currentWager > 1 ? 's' : ''}`;
-            ddDisplay.classList.add('daredevil-active-text');
-        } else {
-            ddDisplay.textContent = "Daredevil: OFF";
-            ddDisplay.classList.remove('daredevil-active-text');
-        }
-    }
-}
-
-function resetDaredevil() {
-    currentWager = 0;
-    updateDaredevilUI();
-}
-
 function setupBoard() {
-    currentRow = isDaredevil ? currentWager : 0; 
+    currentRow = 0; 
     
     currentTile = 0;
     currentGuess = "";
@@ -197,17 +174,6 @@ function checkGuess() {
         document.getElementById('win-modal').classList.remove('hidden');
         isGameOver = true;
 
-        if (isDaredevil) {
-            const bonus = currentWager * 2;
-
-            console.log(`[API] DAREDEVIL SUCCESS! Awarding ${bonus} points to ${currentPlayer}`);
-            const winner = dummyPlayers.find(p => p.name === currentPlayer);
-            if (winner) {
-                winner.points += bonus;
-            }
-            resetDaredevil();
-        }
-
         console.log(`[API] ${currentPlayer} guessed correctly and is the new Shark!`);
         currentShark = currentPlayer;
         updateSharkDisplay();
@@ -240,7 +206,6 @@ const tryAgainBtn = document.getElementById('try-again-btn');
 
 tryAgainBtn.addEventListener('click', () => {
     document.getElementById('lose-modal').classList.add('hidden');
-    resetDaredevil();
     setupBoard();
 });
 
@@ -252,7 +217,6 @@ loseMenuBtn.addEventListener('click', () => {
     document.getElementById('game-screen').classList.add('hidden');
     
     document.getElementById('home-screen').classList.remove('hidden');
-    resetDaredevil();
     setupBoard();
 });
 
@@ -262,7 +226,6 @@ loseLeaderboardBtn.addEventListener('click', () => {
     
     renderLeaderboard(dummyPlayers);
     document.getElementById('leaderboard-screen').classList.remove('hidden');
-    resetDaredevil();
     setupBoard();
 });
 
@@ -298,15 +261,6 @@ const startGameBtn = document.getElementById('start-game-btn');
 startGameBtn.addEventListener('click', () => {
     homeScreen.classList.add('hidden');
     gameScreen.classList.remove('hidden');
-    
-    // Deduct wager from player
-    if (isDaredevil) {
-        const player = dummyPlayers.find(p => p.name === currentPlayer);
-        if (player) {
-            player.points -= currentWager; 
-            console.log(`[API] Deducted ${currentWager} points from ${currentPlayer}. Current balance: ${player.points}`);
-        }
-    }
 
     setupBoard();
 });
@@ -340,34 +294,6 @@ if (chooseNameBtn && playerDropdownList) {
         if (!playerDropdownList.contains(event.target) && event.target !== chooseNameBtn) {
             playerDropdownList.classList.add('hidden');
         }
-    });
-}
-
-//Daredevil stepper
-const ddDownBtn = document.getElementById('dd-down-btn');
-const ddUpBtn = document.getElementById('dd-up-btn');
-
-if (ddUpBtn) {
-    ddUpBtn.addEventListener('click', () => {
-        currentWager++;
-        
-        if (currentWager > 5) {
-            currentWager = 0;
-        }
-        
-        updateDaredevilUI();
-    });
-}
-
-if (ddDownBtn) {
-    ddDownBtn.addEventListener('click', () => {
-        currentWager--;
-        
-        if (currentWager < 0) {
-            currentWager = 5;
-        }
-        
-        updateDaredevilUI();
     });
 }
 
@@ -418,21 +344,6 @@ function renderLeaderboard(players) {
 }
 
 //Info modals
-const challengeInfoBtn = document.getElementById('challenge-info-btn');
-const challengeInfoModal = document.getElementById('challenge-info-modal');
-const closeChallengeInfoBtn = document.getElementById('close-challenge-info-btn');
-const closeInfoX = document.getElementById('close-info-x');
-
-challengeInfoBtn.addEventListener('click', () => {
-    challengeInfoModal.classList.remove('hidden');
-});
-closeChallengeInfoBtn.addEventListener('click', () => {
-    challengeInfoModal.classList.add('hidden');
-});
-if (closeInfoX) {
-    closeInfoX.addEventListener('click', () => challengeInfoModal.classList.add('hidden'));
-}
-
 const howToPlayBtn = document.getElementById('how-to-play-btn');
 const howToPlayModal = document.getElementById('how-to-play-modal');
 const closeHowToPlayBtn = document.getElementById('close-how-to-play-btn');
@@ -467,7 +378,6 @@ function awardSharkFish() {
 
 // List of modals that are safe to close by clicking outside
 const closableModalIds = [
-    'challenge-info-modal', 
     'how-to-play-modal'
 ];
 
