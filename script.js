@@ -1,9 +1,9 @@
 const dummyPlayers = [
-    { name: "Elijah", points: 15, fishEaten: 2 },
-    { name: "Samantha", points: 42, fishEaten: 0 },
-    { name: "Clayton", points: 15, fishEaten: 3 },
-    { name: "Amelia", points: 30, fishEaten: 2 },
-    { name: "John", points: 5, fishEaten: 0 }
+    { name: "Elijah", timeAsShark: 125000, fishEaten: 2, sharksEvaded: 4 }, // Time in seconds
+    { name: "Samantha", timeAsShark: 450000, fishEaten: 0, sharksEvaded: 10 },
+    { name: "Clayton", timeAsShark: 86400, fishEaten: 3, sharksEvaded: 2 },
+    { name: "Amelia", timeAsShark: 9000, fishEaten: 2, sharksEvaded: 5 },
+    { name: "John", timeAsShark: 0, fishEaten: 0, sharksEvaded: 1 }
 ];
 
 let secretWord = "SHARK";
@@ -177,11 +177,12 @@ function checkGuess() {
         console.log(`[API] ${currentPlayer} guessed correctly and is the new Shark!`);
         currentShark = currentPlayer;
         updateSharkDisplay();
+        awardSharkEvaded();
+    console.log(`[API] Placeholder: Stop DB timer for ${currentShark}, start DB timer for ${currentPlayer}`);
         return;
     }
 
     // Incorrect guess logic
-    awardSharkPoints(1);
 
     currentRow++;
     currentTile = 0;
@@ -298,6 +299,16 @@ if (chooseNameBtn && playerDropdownList) {
 }
 
 //Leaderboard
+
+function formatSharkTime(totalSeconds) {
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    return `${days.toString().padStart(3, '0')}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
 const leaderboardBtn = document.getElementById('leaderboard-btn');
 const backToMenuBtn = document.getElementById('back-to-menu-btn');
 
@@ -316,11 +327,8 @@ function renderLeaderboard(players) {
     const tbody = document.getElementById('leaderboard-body');
     tbody.innerHTML = '';
 
-    const sortedPlayers = [...players].sort((a, b) => {
-        const totalA = a.points + (a.fishEaten * 5);
-        const totalB = b.points + (b.fishEaten * 5);
-        return totalB - totalA;
-    });
+    // Sort by timeAsShark descending
+    const sortedPlayers = [...players].sort((a, b) => b.timeAsShark - a.timeAsShark);
 
     sortedPlayers.forEach((player, index) => {
         const rank = index + 1;
@@ -330,12 +338,15 @@ function renderLeaderboard(players) {
         if (rank === 2) rankClass = 'rank-2';
         if (rank === 3) rankClass = 'rank-3';
 
+        const formattedTime = formatSharkTime(player.timeAsShark);
+
         const rowHTML = `
         <tr>
             <td class="${rankClass}">${rank}</td>
             <td>${player.name}</td>
-            <td>${player.points}</td>
+            <td>${formattedTime}</td>
             <td>${player.fishEaten}</td>
+            <td>${player.sharksEvaded}</td>
         </tr>
     `;
 
@@ -360,11 +371,11 @@ if (closeHowToX) {
 }
 
 //Dummy backend
-function awardSharkPoints(points) {
-    console.log(`[API] Awarding ${points} points to Shark (${currentShark})`);
-    const shark = dummyPlayers.find(p => p.name === currentShark);
-    if (shark) {
-        shark.points += points;
+function awardSharkEvaded() {
+    console.log(`[API] Placeholder: Awarding 1 Shark Evaded to ${currentPlayer}`);
+    const player = dummyPlayers.find(p => p.name === currentPlayer);
+    if (player) {
+        player.sharksEvaded += 1;
     }
 }
 
