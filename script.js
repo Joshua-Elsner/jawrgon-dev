@@ -112,6 +112,18 @@ function checkGuess() {
         return;
     }
 
+    if (!VALID_WORDS.includes(currentGuess)) {
+        const currentRowEl = rows[currentRow];
+        currentRowEl.classList.add('shake');
+        
+        // Remove the shake class after animation finishes so it can be shaken again
+        setTimeout(() => {
+            currentRowEl.classList.remove('shake');
+        }, 400);
+        
+        return;
+    }
+
     const tiles = rows[currentRow].children;
     let secretLetterCounts = {};
     let guessStatuses = new Array(5).fill('absent'); //Default everything to gray
@@ -238,6 +250,11 @@ submitNewWordBtn.addEventListener('click', () => {
 
     if (newWord.length !== 5) {
         alert("Must be 5 letters");
+        return;
+    }
+
+    if (!VALID_WORDS.includes(newWord)) {
+        alert("Not in word list");
         return;
     }
 

@@ -466,3 +466,13 @@ background-color: var(--color-absent) !important;
         font-size: 0.75rem;
     }
 }
+
+.shake {
+    animation: shake 0.4s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-5px); }
+    40%, 80% { transform: translateX(5px); }
+}
