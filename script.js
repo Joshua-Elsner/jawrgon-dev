@@ -186,15 +186,32 @@ function checkGuess() {
         document.getElementById('win-modal').classList.remove('hidden');
         isGameOver = true;
 
-        console.log(`[API] ${currentPlayer} guessed correctly and is the new Shark!`);
-        currentShark = currentPlayer;
-        updateSharkDisplay();
-        awardSharkEvaded();
-    console.log(`[API] Placeholder: Stop DB timer for ${currentShark}, start DB timer for ${currentPlayer}`);
+        const winModalTitle = document.querySelector('#win-modal h2');
+        const winModalDesc = document.querySelector('#win-modal p');
+        const newWordInput = document.getElementById('new-word-input');
+        const submitBtn = document.getElementById('submit-new-word');
+
+        if (currentPlayer === "Guest") {
+            // Guest UI
+            winModalTitle.textContent = "You Survived!";
+            winModalDesc.textContent = "Great guessing! However, Guests cannot become the Shark or set new words.";
+            newWordInput.classList.add('hidden');
+            submitBtn.textContent = "Back to Menu";
+        } else {
+            // Registered player UI and logic
+            winModalTitle.textContent = "Winner!";
+            winModalDesc.textContent = "5 letter secret word for next player:";
+            newWordInput.classList.remove('hidden');
+            submitBtn.textContent = "Go To Leaderboard";
+
+            console.log(`[API] ${currentPlayer} guessed correctly and is the new Shark!`);
+            currentShark = currentPlayer;
+            updateSharkDisplay();
+            awardSharkEvaded();
+            console.log(`[API] Placeholder: Stop DB timer for ${currentShark}, start DB timer for ${currentPlayer}`);
+        }
         return;
     }
-
-    // Incorrect guess logic
 
     currentRow++;
     currentTile = 0;
@@ -246,27 +263,35 @@ const submitNewWordBtn = document.getElementById('submit-new-word');
 const newWordInput = document.getElementById('new-word-input');
 
 submitNewWordBtn.addEventListener('click', () => {
-    const newWord = newWordInput.value.toUpperCase().trim();
+    // Only validate and set a new word if they are a registered player
+    if (currentPlayer !== "Guest") {
+        const newWord = newWordInput.value.toUpperCase().trim();
 
-    if (newWord.length !== 5) {
-        alert("Must be 5 letters");
-        return;
+        if (newWord.length !== 5) {
+            alert("Must be 5 letters");
+            return;
+        }
+
+        if (typeof VALID_WORDS !== 'undefined' && !VALID_WORDS.includes(newWord)) {
+            alert("That is not a valid dictionary word!");
+            return;
+        }
+
+        secretWord = newWord;
     }
 
-    if (!VALID_WORDS.includes(newWord)) {
-        alert("Not in word list");
-        return;
-    }
-
-    secretWord = newWord;
     newWordInput.value = "";
-
     setupBoard();
 
-    renderLeaderboard(dummyPlayers);
     document.getElementById('win-modal').classList.add('hidden');
     document.getElementById('game-screen').classList.add('hidden');
-    document.getElementById('leaderboard-screen').classList.remove('hidden');
+
+    if (currentPlayer === "Guest") {
+        document.getElementById('home-screen').classList.remove('hidden');
+    } else {
+        renderLeaderboard(dummyPlayers);
+        document.getElementById('leaderboard-screen').classList.remove('hidden');
+    }
 });
 
 const homeScreen = document.getElementById('home-screen');
