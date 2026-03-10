@@ -495,3 +495,21 @@ background-color: var(--color-absent) !important;
 #how-to-play-modal h2 {
     color: var(--color-text);
 }
+
+.secondary-modal-btn {
+    padding: 12px;
+    font-size: 1.1rem; 
+    background-color: transparent;
+    color: #888;
+    border: 2px solid #888;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.secondary-modal-btn:hover {
+    color: var(--color-text);
+    border-color: var(--color-text);
+    background-color: rgba(125, 211, 252, 0.1); 
+}
