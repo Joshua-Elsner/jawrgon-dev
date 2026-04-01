@@ -26,18 +26,11 @@ let currentGuess = "";
 let isGameOver = false;
 
 function updateSharkDisplay() {
-    // Safely grab the elements
-    const homeNameEl = document.getElementById('home-shark-name');
-    const boardNameEl = document.getElementById('leaderboard-shark-name');
+    const homeDisplay = document.getElementById('home-shark-display');
+    const boardDisplay = document.getElementById('leaderboard-shark-display');
 
-    // Only update them if they actually exist on the page
-    if (homeNameEl) {
-        homeNameEl.textContent = `Current Shark: ${currentShark}`;
-    }
-    
-    if (boardNameEl) {
-        boardNameEl.textContent = `Current Shark: ${currentShark}`;
-    }
+    if (homeDisplay) homeDisplay.textContent = `Current Shark: ${currentShark}`;
+    if (boardDisplay) boardDisplay.textContent = `Current Shark: ${currentShark}`;
 }
 
 function updateStartButton() {
@@ -452,21 +445,19 @@ function renderLeaderboard(players) {
     const tbody = document.getElementById('leaderboard-body');
     tbody.innerHTML = '';
 
-    // Calculate live total times BEFORE sorting, so the active shark's live time counts toward their rank
     const playersWithLiveTime = players.map(player => {
         let displayTimeSeconds = player.total_time_as_shark;
         const isShark = player.username === currentShark;
 
-        // Add the currently ticking seconds to their historical total
         if (isShark && sharkStartTime) {
             const liveSeconds = Math.floor((new Date() - new Date(sharkStartTime)) / 1000);
             displayTimeSeconds += liveSeconds;
         }
 
-        return { ...player, displayTimeSeconds, isShark };
+        // We also pass the baseTime so the timer knows what number to start adding to
+        return { ...player, displayTimeSeconds, isShark, baseTime: player.total_time_as_shark };
     });
 
-    // Sort by the newly calculated display time
     const sortedPlayers = playersWithLiveTime.sort((a, b) => b.displayTimeSeconds - a.displayTimeSeconds);
 
     sortedPlayers.forEach((player, index) => {
@@ -479,12 +470,16 @@ function renderLeaderboard(players) {
 
         const formattedTime = formatSharkTime(player.displayTimeSeconds);
         const sharkStyle = player.isShark ? 'style="color: var(--color-present);"' : '';
+        
+        // NEW: Tag the active shark's time cell so our timer loop can find it
+        const timeCellId = player.isShark ? 'id="active-shark-live-time"' : '';
+        const baseTimeAttr = player.isShark ? `data-basetime="${player.baseTime}"` : '';
 
         const rowHTML = `
         <tr>
             <td class="${rankClass}">${rank}</td>
             <td ${sharkStyle}>${player.username}</td>
-            <td ${sharkStyle}>${formattedTime}</td>
+            <td ${sharkStyle} ${timeCellId} ${baseTimeAttr}>${formattedTime}</td>
             <td>${player.fish_eaten}</td>
             <td>${player.sharks_evaded}</td>
         </tr>
@@ -574,42 +569,34 @@ async function fetchAndRenderLeaderboard() {
 }
 
 function startSharkTimer() {
-    // 1. Clear any existing timer so we don't accidentally run two clocks at once
     if (timerInterval) {
         clearInterval(timerInterval);
     }
 
-    const homeTimerEl = document.getElementById('home-shark-timer');
-    const boardTimerEl = document.getElementById('leaderboard-shark-timer');
+    if (!sharkStartTime || currentShark === "No Shark Yet") return;
 
-    // 2. If there is no shark yet, clear the timer text
-    if (!sharkStartTime || currentShark === "No Shark Yet") {
-        if (homeTimerEl) homeTimerEl.textContent = "";
-        if (boardTimerEl) boardTimerEl.textContent = "";
-        return;
-    }
-
-    // 3. The ticking function
     function tickClock() {
-        const now = new Date();
-        const start = new Date(sharkStartTime);
+        // Look for the active shark's table cell
+        const liveTimeCell = document.getElementById('active-shark-live-time');
         
-        // Calculate seconds elapsed since the shark took power
-        const elapsedSeconds = Math.floor((now - start) / 1000);
-
-        // Format it using your existing function!
-        const formattedTime = formatSharkTime(elapsedSeconds);
-        
-        // Update the HTML
-        if (homeTimerEl) homeTimerEl.textContent = `Time in Power: ${formattedTime}`;
-        if (boardTimerEl) boardTimerEl.textContent = `Time in Power: ${formattedTime}`;
+        // If the cell exists (meaning the user has the leaderboard open)
+        if (liveTimeCell) {
+            const now = new Date();
+            const start = new Date(sharkStartTime);
+            
+            // Calculate elapsed seconds since they became the shark
+            const liveSeconds = Math.floor((now - start) / 1000);
+            
+            // Get their previous historical time from the data attribute we injected
+            const baseTime = parseInt(liveTimeCell.getAttribute('data-basetime'), 10) || 0;
+            
+            // Update the table cell text in real time!
+            liveTimeCell.textContent = formatSharkTime(baseTime + liveSeconds);
+        }
     }
 
-    // Run it immediately once so there is no 1-second delay
-    tickClock();
-    
-    // Start the loop to run every 1000ms
-    timerInterval = setInterval(tickClock, 1000);
+    tickClock(); // Run once immediately
+    timerInterval = setInterval(tickClock, 1000); // Loop every 1 second
 }
 
 // Initialize the game with live data
