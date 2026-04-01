@@ -599,6 +599,55 @@ function startSharkTimer() {
     timerInterval = setInterval(tickClock, 1000); // Loop every 1 second
 }
 
+// ========== Realtime Subscriptions ============
+
+function setupRealtimeSubscriptions() {
+    // 1. Listen for changes to the Leaderboard (players table)
+    supabase
+        .channel('players-channel')
+        .on(
+            'postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'players' },
+            (payload) => {
+                console.log("Live update! Someone's stats changed.");
+                // Simply re-fetch and re-render the leaderboard
+                fetchAndRenderLeaderboard();
+            }
+        )
+        .subscribe();
+
+    // 2. Listen for changes to the Game State (New Shark / New Word!)
+    supabase
+        .channel('game-state-channel')
+        .on(
+            'postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'game_state' },
+            async (payload) => {
+                console.log("Live update! New Shark took over!");
+                
+                // Save the old word before we fetch the new one
+                const oldSecretWord = secretWord;
+                
+                // Fetch the new state (This updates the UI, timer, and the secretWord variable)
+                await fetchGameState();
+
+                // UX Polish: If a player is currently in the middle of a game 
+                // and someone else wins, we need to let them know the word changed!
+                const gameScreenIsVisible = !document.getElementById('game-screen').classList.contains('hidden');
+                const isCurrentlyPlaying = currentRow > 0 || currentTile > 0;
+
+                if (gameScreenIsVisible && isCurrentlyPlaying && oldSecretWord !== secretWord && !isGameOver) {
+                    alert(`Whoops! ${currentShark} just guessed the word and became the new Shark! The secret word has been changed.`);
+                    setupBoard(); // Reset their board so they can try against the new word
+                }
+            }
+        )
+        .subscribe();
+}
+
+// Call the new function alongside your other initialization functions at the very bottom
+setupRealtimeSubscriptions();
+
 // Initialize the game with live data
 fetchGameState();
 fetchAndRenderLeaderboard();
