@@ -245,9 +245,7 @@ async function checkGuess() {
         if (currentSharkId) {
             console.log(`[API] Updating DB: ${currentShark} ate a fish!`);
 
-            const { error } = await supabase.rpc('record_shark_meal', {
-                active_shark_id: currentSharkId
-            });
+            const { error } = await supabase.rpc('record_shark_meal');
 
             if (error) {
                 console.error("Error recording shark meal:", error);
@@ -313,7 +311,7 @@ submitNewWordBtn.addEventListener('click', async () => {
 
         const { error } = await supabase.rpc('claim_shark_title', {
             winner_id: currentPlayerId,
-            outgoing_shark_id: currentSharkId,
+            guessed_word: currentGuess,
             new_secret_word: newWord
         });
 
