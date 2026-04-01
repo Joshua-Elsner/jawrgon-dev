@@ -569,3 +569,32 @@ button:disabled:hover {
     background-color: var(--color-present);
     color: var(--color-background);
 }
+
+#toast-container {
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    z-index: 1000; /* Keeps it above everything, including modals */
+    pointer-events: none; /* Lets users click through the gap between toasts */
+}
+
+.toast {
+    background-color: var(--color-text); /* Light blue from your theme */
+    color: var(--color-background); /* Dark navy background */
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    opacity: 1;
+    transition: opacity 0.4s ease;
+}
+
+.toast.fade-out {
+    opacity: 0;
+}

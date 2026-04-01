@@ -28,6 +28,25 @@ let currentTile = 0;
 let currentGuess = "";
 let isGameOver = false;
 
+function showToast(message, duration = 2500) {
+    const container = document.getElementById('toast-container');
+    
+    // Create the toast element
+    const toast = document.createElement('div');
+    toast.classList.add('toast');
+    toast.textContent = message;
+    
+    // Add it to the screen
+    container.appendChild(toast);
+    
+    // Start the fade out after 'duration' milliseconds
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        // Actually remove the element from the DOM once the animation finishes
+        toast.addEventListener('transitionend', () => toast.remove());
+    }, duration);
+}
+
 function updateSharkDisplay() {
     const homeDisplay = document.getElementById('home-shark-display');
     const boardDisplay = document.getElementById('leaderboard-shark-display');
@@ -310,12 +329,12 @@ submitNewWordBtn.addEventListener('click', async () => {
         const newWord = newWordInput.value.toUpperCase().trim();
 
         if (newWord.length !== 5) {
-            alert("Must be 5 letters");
+            showToast("Must be 5 letters");
             return;
         }
 
         if (typeof VALID_WORDS !== 'undefined' && !VALID_WORDS.includes(newWord)) {
-            alert("That is not a valid dictionary word!");
+            showToast("That is not a valid dictionary word!");
             return;
         }
 
@@ -333,9 +352,9 @@ submitNewWordBtn.addEventListener('click', async () => {
             
             // --- NEW: Show the actual database error to the user ---
             if (error.message.includes('Word already used')) {
-                alert("That word has already been used in a past game! Please choose a new one.");
+                showToast("That word has already been used in a past game! Please choose a new one.");
             } else {
-                alert(error.message || "Failed to update the database.");
+                showToast(error.message || "Failed to update the database.");
             }
             
             submitNewWordBtn.textContent = "Confirm";
@@ -649,7 +668,7 @@ function setupRealtimeSubscriptions() {
                 const isCurrentlyPlaying = currentRow > 0 || currentTile > 0;
 
                 if (gameScreenIsVisible && isCurrentlyPlaying && oldSecretWord !== secretWord && !isGameOver) {
-                    alert(`Whoops! ${currentShark} just guessed the word and became the new Shark! The secret word has been changed.`);
+                    showToast(`Whoops! ${currentShark} just guessed the word and became the new Shark! The secret word has been changed.`);
                     setupBoard(); // Reset their board so they can try against the new word
                 }
             }
