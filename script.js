@@ -7,7 +7,6 @@ const supabaseKey = 'sb_publishable_ZJGYQbdtUaABBX1lhOw8qw_Ksiw-S54';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // --- DOM Elements ---
-// (Moved to top so they are ready before functions try to use them!)
 const startGameBtn = document.getElementById('start-game-btn');
 const rows = document.querySelectorAll('.board-row');
 const keys = document.querySelectorAll('.key');
@@ -131,7 +130,7 @@ async function checkGuess() {
         return;
     }
 
-    if (!VALID_WORDS.includes(currentGuess)) {
+    if (typeof VALID_WORDS !== 'undefined' && !VALID_WORDS.includes(currentGuess)) {
         const currentRowEl = rows[currentRow];
         currentRowEl.classList.add('shake');
         
@@ -258,7 +257,6 @@ async function checkGuess() {
         return;
     }
 
-    // --- FIX: THIS WAS MISSING! ---
     // Reveal next row of bubbles
     rows[currentRow].classList.remove('row-collapsed');
 }
@@ -310,7 +308,7 @@ submitNewWordBtn.addEventListener('click', async () => {
             return;
         }
 
-        submitNewWordBtn.textContent = "Updating Database...";
+        submitNewWordBtn.textContent = "Updating...";
         submitNewWordBtn.disabled = true;
 
         const { error } = await supabase.rpc('claim_shark_title', {
@@ -364,9 +362,10 @@ const leaderboardScreen = document.getElementById('leaderboard-screen');
 
 // Starting the game from the main menu
 startGameBtn.addEventListener('click', () => {
+    // Make sure we grab the absolute freshest word from the DB before starting
+    fetchGameState();
     homeScreen.classList.add('hidden');
     gameScreen.classList.remove('hidden');
-
     setupBoard();
 });
 
