@@ -26,8 +26,18 @@ let currentGuess = "";
 let isGameOver = false;
 
 function updateSharkDisplay() {
-    document.getElementById('home-shark-name').textContent = `Current Shark: ${currentShark}`;
-    document.getElementById('leaderboard-shark-name').textContent = `Current Shark: ${currentShark}`;
+    // Safely grab the elements
+    const homeNameEl = document.getElementById('home-shark-name');
+    const boardNameEl = document.getElementById('leaderboard-shark-name');
+
+    // Only update them if they actually exist on the page
+    if (homeNameEl) {
+        homeNameEl.textContent = `Current Shark: ${currentShark}`;
+    }
+    
+    if (boardNameEl) {
+        boardNameEl.textContent = `Current Shark: ${currentShark}`;
+    }
 }
 
 function updateStartButton() {
