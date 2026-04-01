@@ -19,6 +19,7 @@ let currentPlayerId = null;
 let currentSharkId = null;
 let sharkStartTime = null; 
 let timerInterval = null;  
+let cachedPlayers = [];
 
 let currentRow = 0;
 let currentTile = 0;
@@ -565,10 +566,12 @@ async function fetchAndRenderLeaderboard() {
         return;
     }
 
-    renderLeaderboard(players);
+    cachedPlayers = players; // Save to our global memory!
+    renderLeaderboard(cachedPlayers);
 }
 
 function startSharkTimer() {
+    // Clear any existing timer so we don't accidentally run two clocks at once
     if (timerInterval) {
         clearInterval(timerInterval);
     }
@@ -576,22 +579,14 @@ function startSharkTimer() {
     if (!sharkStartTime || currentShark === "No Shark Yet") return;
 
     function tickClock() {
-        // Look for the active shark's table cell
-        const liveTimeCell = document.getElementById('active-shark-live-time');
+        // Only do the heavy lifting if the user is actually looking at the leaderboard
+        const leaderboardScreen = document.getElementById('leaderboard-screen');
         
-        // If the cell exists (meaning the user has the leaderboard open)
-        if (liveTimeCell) {
-            const now = new Date();
-            const start = new Date(sharkStartTime);
-            
-            // Calculate elapsed seconds since they became the shark
-            const liveSeconds = Math.floor((now - start) / 1000);
-            
-            // Get their previous historical time from the data attribute we injected
-            const baseTime = parseInt(liveTimeCell.getAttribute('data-basetime'), 10) || 0;
-            
-            // Update the table cell text in real time!
-            liveTimeCell.textContent = formatSharkTime(baseTime + liveSeconds);
+        if (!leaderboardScreen.classList.contains('hidden') && cachedPlayers.length > 0) {
+            // Re-render the table using our saved memory. 
+            // Because renderLeaderboard recalculates the live time AND sorts the array,
+            // the Shark will automatically jump up a row the second they beat the next score!
+            renderLeaderboard(cachedPlayers);
         }
     }
 
