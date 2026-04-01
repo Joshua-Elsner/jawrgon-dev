@@ -1,14 +1,15 @@
--- 04_record_loss.sql
-CREATE OR REPLACE FUNCTION record_loss(shark_id UUID)
-RETURNS void
+CREATE OR REPLACE FUNCTION record_shark_meal(
+    active_shark_id UUID
+) RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 BEGIN
-    IF shark_id IS NOT NULL THEN
+    -- Give the current Shark a point for eating the player
+    IF active_shark_id IS NOT NULL THEN
         UPDATE players
         SET fish_eaten = fish_eaten + 1
-        WHERE id = shark_id;
+        WHERE id = active_shark_id;
     END IF;
 END;
 $$;

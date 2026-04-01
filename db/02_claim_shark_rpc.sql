@@ -15,16 +15,14 @@ BEGIN
     FROM game_state
     WHERE id = 1;
 
-    -- 2. Update the outgoing Shark's stats (if there is one)
+    -- 2. Update the outgoing Shark's stats (TIME ONLY, NO FISH EATEN)
     IF outgoing_shark_id IS NOT NULL THEN
         UPDATE players
-        SET 
-            total_time_as_shark = total_time_as_shark + COALESCE(shark_duration_seconds, 0),
-            fish_eaten = fish_eaten + 1
+        SET total_time_as_shark = total_time_as_shark + COALESCE(shark_duration_seconds, 0)
         WHERE id = outgoing_shark_id;
     END IF;
 
-    -- 3. Update the Winner's (new Shark's) stats
+    -- 3. Update the Winner's stats (They survived/evaded!)
     UPDATE players
     SET sharks_evaded = sharks_evaded + 1
     WHERE id = winner_id;
@@ -33,7 +31,7 @@ BEGIN
     UPDATE game_state
     SET 
         current_shark_id = winner_id,
-        secret_word = UPPER(new_secret_word), -- Force uppercase just to be safe
+        secret_word = UPPER(new_secret_word),
         shark_start_time = NOW()
     WHERE id = 1;
 END;

@@ -239,22 +239,25 @@ async function checkGuess() {
 
     // Lose check
     if (currentRow === 6) {
-        // Record the loss for the current shark (if one exists)
-        if (currentSharkId) {
-            const { error } = await supabase.rpc('record_loss', { shark_id: currentSharkId });
-            if (error) {
-                console.error('Error recording loss:', error);
-            }
-        }
         document.getElementById('lose-modal').classList.remove('hidden');
         isGameOver = true;
+
+        // --- NEW LOGIC: Reward the Shark for defending their word! ---
+        if (currentSharkId) {
+            console.log(`[API] Updating DB: ${currentShark} ate a fish!`);
+            
+            const { error } = await supabase.rpc('record_shark_meal', {
+                active_shark_id: currentSharkId
+            });
+
+            if (error) {
+                console.error("Error recording shark meal:", error);
+            }
+        }
+
         return;
     }
-
-    // Reveal next row of bubbles
-    rows[currentRow].classList.remove('row-collapsed');
-}
-
+    
 //  UI and event listeners============
 
 const tryAgainBtn = document.getElementById('try-again-btn');
