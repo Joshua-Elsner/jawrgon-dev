@@ -675,7 +675,7 @@ async function displayWordSuggestions() {
     }
 
     // 2. Filter out used words from the global VALID_WORDS array
-    const unusedWords = VALID_WORDS.filter(word => !usedWordsList.includes(word.toUpperCase()));
+    const unusedWords = COMMON_WORDS.filter(word => !usedWordsList.includes(word.toUpperCase()));
 
     // 3. Pick 2 random words
     if (unusedWords.length >= 2) {
