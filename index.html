@@ -25,26 +25,33 @@
             <button id="try-again-btn">Try Again</button>
             <button id="lose-menu-btn" class="secondary-modal-btn">Back to Menu</button>
             <button id="lose-leaderboard-btn" class="secondary-modal-btn">Leaderboard</button>
-            </div>
+        </div>
     </div>
 
     <div id="how-to-play-modal" class="hidden">
         <div class="modal-content">
             <span class="close-modal-x" id="close-how-to-x">&times;</span>
             <h2>How to Play</h2>
-                <p><p>Welcome to JAWRGON! Your goal is to guess the shark's secret 5-letter word in six tries or less. After each guess, the bubbles will change color: Green means the letter is correctly placed, yellow means it's in the word but the wrong spot, and gray means it isn't in the word at all. If you guess correctly, you survive, become the shark, and get to set the next word. Your rank on the leaderboard is determined by how long you can maintain your reign as the Shark.</p>
+            <p>
+            <p>Welcome to JAWRGON! Your goal is to guess the shark's secret 5-letter word in six tries or less. After
+                each guess, the bubbles will change color: Green means the letter is correctly placed, yellow means it's
+                in the word but the wrong spot, and gray means it isn't in the word at all. If you guess correctly, you
+                survive, become the shark, and get to set the next word. Your rank on the leaderboard is determined by
+                how long you can maintain your reign as the Shark.</p>
             <button id="close-how-to-play-btn">Let's Go!</button>
         </div>
     </div>
-
     <div id="home-screen">
         <h1>JAWRGON!</h1>
         <h2>Try to guess the secret word in 6 attempts max!</h2>
-
-        <h3 id="home-shark-display" class="shark-display">Current Shark: Loading...</h3>
+        <h3 class="shark-display">
+            <span id="home-shark-name">Current Shark: Loading...</span><br>
+            <span id="home-shark-timer" style="font-size: 0.9rem; color: var(--color-text);"></span>
+        </h3>
 
         <div class="menu-buttons">
-            <button id="start-game-btn">Play as Guest<br><span style="font-size: 0.85rem; font-weight: normal;">(Cannot set new word)</span></button>
+            <button id="start-game-btn">Play as Guest<br><span style="font-size: 0.85rem; font-weight: normal;">(Cannot
+                    set new word)</span></button>
 
             <div class="custom-dropdown">
                 <button id="choose-name-btn" class="dropdown-toggle">Choose Player</button>
@@ -147,7 +154,10 @@
     <div id="leaderboard-screen" class="hidden">
         <h1>Leaderboard</h1>
 
-        <h3 id="leaderboard-shark-display" class="shark-display"></h3>
+        <h3 class="shark-display">
+            <span id="leaderboard-shark-name">Current Shark: Loading...</span><br>
+            <span id="leaderboard-shark-timer" style="font-size: 0.9rem; color: var(--color-text);"></span>
+        </h3>
 
         <div class="leaderboard-container">
             <table id="leaderboard-table">
@@ -161,7 +171,7 @@
                     </tr>
                 </thead>
                 <tbody id="leaderboard-body">
-                    </tbody>
+                </tbody>
             </table>
         </div>
 
