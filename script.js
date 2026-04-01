@@ -14,6 +14,12 @@ let currentPlayer = "Guest";
 let currentPlayerId = null;
 let currentSharkId = null;
 
+// ADD THESE 4 LINES BACK IN:
+let currentRow = 0;
+let currentTile = 0;
+let currentGuess = "";
+let isGameOver = false;
+
 function updateSharkDisplay() {
     document.getElementById('home-shark-display').textContent = `Current Shark: ${currentShark}`;
     document.getElementById('leaderboard-shark-display').textContent = `Current Shark: ${currentShark}`;
