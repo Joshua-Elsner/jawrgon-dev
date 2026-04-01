@@ -124,7 +124,7 @@ function deleteLetter() {
     }
 }
 
-function checkGuess() {
+async function checkGuess() {
     // Make sure the user actually typed a full 5 letter word 
     if (currentGuess.length !== 5) {
         return;
@@ -239,9 +239,15 @@ function checkGuess() {
 
     // Lose check
     if (currentRow === 6) {
+        // Record the loss for the current shark (if one exists)
+        if (currentSharkId) {
+            const { error } = await supabase.rpc('record_loss', { shark_id: currentSharkId });
+            if (error) {
+                console.error('Error recording loss:', error);
+            }
+        }
         document.getElementById('lose-modal').classList.remove('hidden');
         isGameOver = true;
-
         return;
     }
 
