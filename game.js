@@ -92,9 +92,9 @@ export function advanceRow() {
  * @returns {boolean}
  */
 export function isValidWord(word) {
-    // Assuming VALID_WORDS is attached globally via words.js in the HTML
-    if (typeof window.VALID_WORDS !== 'undefined') {
-        return window.VALID_WORDS.includes(word.toUpperCase());
+    // FIX: Check global variable directly without `window.` object attachment
+    if (typeof VALID_WORDS !== 'undefined') {
+        return VALID_WORDS.includes(word.toUpperCase());
     }
     return true; // Fallback if words array failed to load
 }
@@ -102,8 +102,7 @@ export function isValidWord(word) {
 /**
  * Evaluates a guess against the secret word and calculates tile colors.
  * This is a PURE FUNCTION: It takes inputs and returns an output without mutating external state.
- * 
- * @param {string} guess - The 5-letter user guess
+ * * @param {string} guess - The 5-letter user guess
  * @param {string} secretWord - The 5-letter actual answer
  * @returns {string[]} Array of statuses: ['correct', 'present', 'absent', ...]
  */

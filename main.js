@@ -160,8 +160,14 @@ async function handleWin() {
         try {
             const usedWords = await fetchUsedWords();
             
-            // Prioritize the COMMON_WORDS array for friendly suggestions if it exists
-            const wordBank = (typeof window.COMMON_WORDS !== 'undefined') ? window.COMMON_WORDS : window.VALID_WORDS;
+            // FIX: Access the global variables directly rather than through the window object
+            let wordBank = [];
+            if (typeof COMMON_WORDS !== 'undefined') {
+                wordBank = COMMON_WORDS;
+            } else if (typeof VALID_WORDS !== 'undefined') {
+                wordBank = VALID_WORDS;
+            }
+
             const unusedWords = wordBank.filter(word => !usedWords.includes(word.toUpperCase()));
 
             if (unusedWords.length >= 2) {
@@ -232,6 +238,21 @@ document.getElementById('leaderboard-btn').addEventListener('click', () => {
 
 document.getElementById('how-to-play-btn').addEventListener('click', () => {
     toggleScreen('how-to-play-modal', true);
+});
+
+// --- Dropdown Controls (RESTORED) ---
+const chooseNameBtn = document.getElementById('choose-name-btn');
+const playerDropdownList = document.getElementById('player-dropdown-list');
+
+chooseNameBtn?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    playerDropdownList?.classList.toggle('hidden');
+});
+
+document.addEventListener('click', (event) => {
+    if (playerDropdownList && !playerDropdownList.contains(event.target) && event.target !== chooseNameBtn) {
+        playerDropdownList.classList.add('hidden');
+    }
 });
 
 // --- Modal Controls ---
