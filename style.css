@@ -607,7 +607,7 @@ button:disabled:hover {
 #top-shark {
     position: absolute;
     top: 20px; /* Locks it to the top of the game screen */
-    width: 180px; /* Adjust based on your image size */
+    width: 20px; /* Adjust based on your image size */
     z-index: 10; /* Ensures it stays on top of the bubbles/fish */
     
     /* Reuses your existing bubble animation to make it float menacingly! */
@@ -615,9 +615,9 @@ button:disabled:hover {
 }
 
 #board-fish {
-    width: 80px; /* Adjust based on your image size */
+    width: 20px; /* Adjust based on your image size */
     align-self: center; /* Centers it above the bubbles */
-    margin-bottom: 20px; /* The gap between the fish and the top row */
+    margin-bottom: 0px; /* The gap between the fish and the top row */
     z-index: 5;
     
     /* Reuses your animation so the fish swims in place */
