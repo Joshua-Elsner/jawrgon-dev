@@ -49,7 +49,7 @@ async function init() {
                 const isCurrentlyPlaying = gameState.currentRow > 0 || gameState.currentTile > 0;
 
                 if (isGameVisible && isCurrentlyPlaying && oldSecretWord !== gameState.secretWord && !gameState.isGameOver) {
-                    showToast(`Whoops! ${gameState.currentShark} just guessed the word!`);
+                    showToast(`YOINK!!! ${gameState.currentShark} just guessed the word!`);
                     startNewGame(); 
                 }
             }
