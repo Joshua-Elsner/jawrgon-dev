@@ -75,8 +75,8 @@ h2 {
 }
 
 .tile {
-    width: 50px;
-    height: 50px;
+    width: 55px;
+    height: 55px;
     border: none;
     border-radius: 50%;
 
@@ -86,7 +86,7 @@ h2 {
     justify-content: center;
     align-items: center;
     
-    font-size: 1.7rem;
+    font-size: 2rem;
     font-weight: bold;
     text-transform: uppercase;
     color: black;
@@ -606,7 +606,7 @@ button:disabled:hover {
 
 #top-shark {
     position: absolute;
-    top: -40px; /* Locks it to the top of the game screen */
+    top: -30px; /* Locks it to the top of the game screen */
     width: 180px; /* Adjust based on your image size */
     z-index: 10; /* Ensures it stays on top of the bubbles/fish */
     
@@ -617,7 +617,7 @@ button:disabled:hover {
 #board-fish {
     width: 80px; /* Adjust based on your image size */
     align-self: center; /* Centers it above the bubbles */
-    margin-bottom: -10px; /* The gap between the fish and the top row */
+    margin-bottom: -15px; /* The gap between the fish and the top row */
     z-index: 5;
     
     /* Reuses your animation so the fish swims in place */
