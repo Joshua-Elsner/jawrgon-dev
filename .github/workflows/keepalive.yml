@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping Supabase API
-       run: |
+        run: |
           curl --request GET 'https://okbynkairmznzcriuknd.supabase.co/rest/v1/game_state?select=id&limit=1' \
           --header 'apikey: ${{ secrets.SUPABASE_ANON_KEY }}' \
           --header 'Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}' \
