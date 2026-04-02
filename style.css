@@ -594,6 +594,8 @@ button:disabled:hover {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     opacity: 1;
     transition: opacity 0.4s ease;
+    white-space: pre-wrap; 
+    text-align: center;
 }
 
 .toast.fade-out {
