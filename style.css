@@ -118,9 +118,9 @@ h2 {
     gap: 8px;
     width: 100%;
     max-width: 500px;
-    padding: 10px;
+    padding: 10px 10px 2px 10px;
 
-    margin-bottom: 20px;
+    margin-bottom: 0px;
 }
 
 .keyboard-row {
