@@ -72,7 +72,6 @@ async function loadPlayers() {
             setPlayer(selectedPlayer.username, selectedPlayer.id);
             updateStartButton(gameState.currentPlayer, gameState.currentShark);
             toggleScreen('player-modal', false);
-            showToast(`Playing as ${selectedPlayer.username}`);
         });
     } catch (e) {
         console.error(e);
