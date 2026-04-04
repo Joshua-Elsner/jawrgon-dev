@@ -54,10 +54,20 @@ async function init() {
     }
 }
 
-// MOVED THIS OUTSIDE OF INIT()
 async function loadPlayers() {
     try {
         const players = await fetchPlayers();
+        
+        // If the current player isn't "Guest", check if their ID still exists in the database
+        if (gameState.currentPlayerId) {
+            const playerStillExists = players.some(p => p.id === gameState.currentPlayerId);
+            if (!playerStillExists) {
+                // If they were wiped from the DB, reset them to Guest
+                setPlayer("Guest", null);
+                updateStartButton("Guest", gameState.currentShark);
+            }
+        }
+
         renderPlayerList(players, (selectedPlayer) => {
             setPlayer(selectedPlayer.username, selectedPlayer.id);
             updateStartButton(gameState.currentPlayer, gameState.currentShark);
