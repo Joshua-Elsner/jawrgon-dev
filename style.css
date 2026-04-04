@@ -176,6 +176,7 @@ background-color: var(--color-absent) !important;
 #win-modal, 
 #lose-modal, 
 #choose-player-modal, 
+#player-modal,
 #how-to-play-modal {
     position: fixed;
     top: 0;
