@@ -55,6 +55,27 @@
         </div>
     </div>
 
+    <div id="player-modal" class="hidden">
+        <div class="modal-content">
+            <span class="close-modal-x" id="close-player-x">&times;</span>
+            <h2>Player Profile</h2>
+            
+            <div id="existing-players-container">
+                <p style="font-size: 0.85rem; color: #888; margin-bottom: 5px;">Select existing:</p>
+                <div id="player-list-grid" class="player-grid">
+                </div>
+            </div>
+
+            <hr style="border-color: var(--color-tile-border); margin: 15px 0;">
+
+            <div id="create-player-container">
+                <p style="font-size: 0.85rem; color: #888; margin-bottom: 5px;">Or create new:</p>
+                <input type="text" id="new-player-input" maxlength="12" placeholder="Max 12 chars" autocomplete="off">
+                <button id="create-player-btn" style="margin-top: 10px;">Create & Play</button>
+            </div>
+        </div>
+    </div>
+
     <div id="how-to-play-modal" class="hidden">
         <div class="modal-content">
             <span class="close-modal-x" id="close-how-to-x">&times;</span>
@@ -77,11 +98,7 @@
             <button id="start-game-btn">Play as Guest<br><span style="font-size: 0.85rem; font-weight: normal;">(Cannot
                     set new word)</span></button>
 
-            <div class="custom-dropdown">
-                <button id="choose-name-btn" class="dropdown-toggle">Choose Player</button>
-                <ul id="player-dropdown-list" class="dropdown-menu hidden">
-                </ul>
-            </div>
+            <button id="open-player-modal-btn">Choose / Create Player</button>
 
             <button id="leaderboard-btn">Leaderboard</button>
 

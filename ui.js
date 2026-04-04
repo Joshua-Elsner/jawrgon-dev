@@ -154,26 +154,28 @@ export function updateStartButton(currentPlayerName, currentSharkName) {
 }
 
 /**
- * Populates the custom dropdown list with player names.
+ * Populates the player grid in the modal.
  */
-export function renderPlayerDropdown(players, onSelectCallback) {
-    const playerDropdownList = document.getElementById('player-dropdown-list');
-    const chooseNameBtn = document.getElementById('choose-name-btn');
-    if (!playerDropdownList || !chooseNameBtn) return;
+export function renderPlayerList(players, onSelectCallback) {
+    const grid = document.getElementById('player-list-grid');
+    if (!grid) return;
 
-    playerDropdownList.innerHTML = ''; 
+    grid.innerHTML = ''; 
     
-    players.forEach(player => {
-        const li = document.createElement('li');
-        li.textContent = player.username;
+    if (players.length === 0) {
+        grid.innerHTML = '<span style="font-size: 0.9rem; color: #888;">No players yet. Create one!</span>';
+        return;
+    }
 
-        // When a name is clicked, fire the callback provided by main.js
-        li.addEventListener('click', () => {
+    players.forEach(player => {
+        const btn = document.createElement('button');
+        btn.textContent = player.username;
+
+        btn.addEventListener('click', () => {
             onSelectCallback(player);
-            playerDropdownList.classList.add('hidden');
         });
         
-        playerDropdownList.appendChild(li);
+        grid.appendChild(btn);
     });
 }
 

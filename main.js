@@ -4,7 +4,7 @@
 import { 
     fetchGameState, fetchLeaderboard, fetchPlayers, 
     claimSharkTitle, recordSharkMeal, fetchUsedWords, 
-    setupRealtimeSubscriptions 
+    setupRealtimeSubscriptions, createNewPlayer
 } from './api.js';
 
 import { 
@@ -16,7 +16,7 @@ import {
 import { 
     showToast, resetBoardUI, updateTileText, paintRowStatuses, 
     shakeRow, revealNextRow, updateSharkDisplay, updateStartButton, 
-    renderPlayerDropdown, toggleScreen, setupWinModal, 
+    renderPlayerList, toggleScreen, setupWinModal, 
     renderWordSuggestions, setSubmitButtonLoading, renderLeaderboardTable 
 } from './ui.js';
 
@@ -30,17 +30,11 @@ async function init() {
     try {
         await loadGameState();
         await loadLeaderboard();
-
-        // Populate the dropdown menu
-        const players = await fetchPlayers();
-        renderPlayerDropdown(players, (selectedPlayer) => {
-            setPlayer(selectedPlayer.username, selectedPlayer.id);
-            updateStartButton(gameState.currentPlayer, gameState.currentShark);
-        });
+        await loadPlayers(); // <-- Just call it here now!
 
         // Setup real-time listeners for multiplayer updates
         setupRealtimeSubscriptions(
-            () => loadLeaderboard(), // Callback for when stats change
+            () => { loadLeaderboard(); loadPlayers(); },
             async () => {             // Callback for when game state changes
                 const oldSecretWord = gameState.secretWord;
                 await loadGameState();
@@ -57,6 +51,21 @@ async function init() {
     } catch (error) {
         showToast("Error connecting to server.");
         console.error(error);
+    }
+}
+
+// MOVED THIS OUTSIDE OF INIT()
+async function loadPlayers() {
+    try {
+        const players = await fetchPlayers();
+        renderPlayerList(players, (selectedPlayer) => {
+            setPlayer(selectedPlayer.username, selectedPlayer.id);
+            updateStartButton(gameState.currentPlayer, gameState.currentShark);
+            toggleScreen('player-modal', false);
+            showToast(`Playing as ${selectedPlayer.username}`);
+        });
+    } catch (e) {
+        console.error(e);
     }
 }
 
@@ -240,18 +249,50 @@ document.getElementById('how-to-play-btn').addEventListener('click', () => {
     toggleScreen('how-to-play-modal', true);
 });
 
-// --- Dropdown Controls (RESTORED) ---
-const chooseNameBtn = document.getElementById('choose-name-btn');
-const playerDropdownList = document.getElementById('player-dropdown-list');
+// --- Remove old Dropdown Controls section entirely, and add this: ---
 
-chooseNameBtn?.addEventListener('click', (event) => {
-    event.stopPropagation();
-    playerDropdownList?.classList.toggle('hidden');
+// --- Player Modal Controls ---
+document.getElementById('open-player-modal-btn')?.addEventListener('click', () => {
+    toggleScreen('player-modal', true);
+});
+document.getElementById('close-player-x')?.addEventListener('click', () => {
+    toggleScreen('player-modal', false);
 });
 
-document.addEventListener('click', (event) => {
-    if (playerDropdownList && !playerDropdownList.contains(event.target) && event.target !== chooseNameBtn) {
-        playerDropdownList.classList.add('hidden');
+// --- Create New Player ---
+document.getElementById('create-player-btn')?.addEventListener('click', async () => {
+    const input = document.getElementById('new-player-input');
+    const newUsername = input ? input.value.trim() : "";
+
+    // 1. Local Validation
+    if (!/^[a-zA-Z0-9]{1,12}$/.test(newUsername)) {
+        showToast("Name must be 1-12 letters/numbers only.");
+        return;
+    }
+
+    const btn = document.getElementById('create-player-btn');
+    btn.textContent = "Creating...";
+    btn.disabled = true;
+
+    // 2. Database Creation
+    try {
+        const newPlayer = await createNewPlayer(newUsername);
+        
+        // 3. Update State & UI
+        setPlayer(newPlayer.username, newPlayer.id);
+        updateStartButton(gameState.currentPlayer, gameState.currentShark);
+        
+        input.value = ""; // Clear input
+        toggleScreen('player-modal', false);
+        showToast(`Welcome, ${newPlayer.username}!`);
+        
+        await loadPlayers(); // Refresh list
+
+    } catch (error) {
+        showToast(error.message || "Failed to create player.");
+    } finally {
+        btn.textContent = "Create & Play";
+        btn.disabled = false;
     }
 });
 

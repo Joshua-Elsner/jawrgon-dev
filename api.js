@@ -124,7 +124,7 @@ export function setupRealtimeSubscriptions(onLeaderboardChange, onGameStateChang
         .channel('players-channel')
         .on(
             'postgres_changes',
-            { event: 'UPDATE', schema: 'public', table: 'players' },
+            { event: '*', schema: 'public', table: 'players' },
             (payload) => {
                 if (onLeaderboardChange) onLeaderboardChange(payload);
             }
@@ -142,4 +142,16 @@ export function setupRealtimeSubscriptions(onLeaderboardChange, onGameStateChang
             }
         )
         .subscribe();
+}
+
+export async function createNewPlayer(username) {
+    const { data, error } = await supabase.rpc('create_new_player', {
+        new_username: username
+    });
+
+    if (error) {
+        console.error("Error creating player:", error);
+        throw error;
+    }
+    return data;
 }
