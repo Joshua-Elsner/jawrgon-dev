@@ -30,7 +30,7 @@ async function init() {
     try {
         await loadGameState();
         await loadLeaderboard();
-        await loadPlayers(); // <-- Just call it here now!
+        await loadPlayers();
 
         // Setup real-time listeners for multiplayer updates
         setupRealtimeSubscriptions(
@@ -41,10 +41,20 @@ async function init() {
 
                 const isGameVisible = !document.getElementById('game-screen').classList.contains('hidden');
                 const isCurrentlyPlaying = gameState.currentRow > 0 || gameState.currentTile > 0;
+                const isSettingWord = !document.getElementById('win-modal').classList.contains('hidden');
 
-                if (isGameVisible && isCurrentlyPlaying && oldSecretWord !== gameState.secretWord && !gameState.isGameOver) {
-                    showToast(`YOINK!!!\n${gameState.currentShark} just guessed the word!`);
-                    startNewGame(); 
+                // If they are on the game screen, and the word changed...
+                if (isGameVisible && oldSecretWord !== gameState.secretWord) {
+                    // Yoink if they are actively guessing OR if they are in the winner modal
+                    if ((isCurrentlyPlaying && !gameState.isGameOver) || isSettingWord) {
+                        showToast(`YOINK!!!\n${gameState.currentShark} just guessed it!\nThe word was: ${oldSecretWord}`, 4000);
+                        
+                        if (isSettingWord) {
+                            toggleScreen('win-modal', false);
+                        }
+                        
+                        startNewGame(); 
+                    }
                 }
             }
         );
