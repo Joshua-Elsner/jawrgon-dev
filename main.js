@@ -260,6 +260,12 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
     toggleScreen('game-screen', true);
 });
 
+document.getElementById('board-return-menu-btn')?.addEventListener('click', () => {
+    toggleScreen('game-screen', false);
+    toggleScreen('home-screen', true);
+    startNewGame(); // Clears their current progress
+});
+
 document.getElementById('leaderboard-btn').addEventListener('click', () => {
     loadLeaderboard();
     toggleScreen('home-screen', false);
