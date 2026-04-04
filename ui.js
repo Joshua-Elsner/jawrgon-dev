@@ -207,8 +207,8 @@ export function setupWinModal(currentPlayerName) {
         if (wordSuggestions) wordSuggestions.classList.add('hidden');
         submitBtn.textContent = "Back to Menu";
     } else {
-        winModalTitle.textContent = "Winner!";
-        winModalDesc.textContent = "Enter new 5 letter secret word!";
+        winModalTitle.textContent = "Correct!";
+        winModalDesc.textContent = "Quick! Set a new word before you get yoinked!";
         if (newWordInput) {
             newWordInput.classList.remove('hidden');
             newWordInput.value = ""; // Clear old inputs
