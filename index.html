@@ -73,7 +73,7 @@
             <button id="close-how-to-play-btn">Let's Go!</button>
         </div>
     </div>
-    <div id="home-screen">
+    <div id="home-screen" class="hidden">
         <h1>JAWRGON!</h1>
         <h2>Try to guess the secret word in 6 attempts max!</h2>
         <h3 id="home-shark-display" class="shark-display">Current Shark: Loading...</h3>
@@ -90,8 +90,13 @@
         </div>
     </div>
 
-    <div id="game-screen" class="hidden" >
-        <button id="board-return-menu-btn" class="circle-btn" style="position: absolute; top: 15px; left: 15px; z-index: 20;">&#9664;</button>
+    <div id="game-screen">
+        <button id="board-return-menu-btn" class="circle-btn"
+            style="position: absolute; top: 15px; left: 15px; z-index: 20;">
+            <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor">
+                <polygon points="18,4 6,12 18,20" />
+            </svg>
+        </button>
         <img id="top-shark" src="shark.png" alt="Shark">
 
         <section id="game-board">

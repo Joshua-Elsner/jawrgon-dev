@@ -643,14 +643,11 @@ button:disabled:hover {
     color: #888;
     border: 2px solid #888;
     cursor: pointer;
+    
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 2rem;   
-    line-height: 0;    
-    padding-bottom: 3px;
-    padding-right: 6px;  
-    font-weight: bold;
+    
     transition: all 0.2s ease;
 }
 
