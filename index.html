@@ -2,23 +2,6 @@
 <html lang="en">
 
 <head>
-     <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    if (urlParams.get('dev') === 'true') {
-        localStorage.setItem('jawrgon_dev_access', 'granted');
-    }
-
-    if (localStorage.getItem('jawrgon_dev_access') !== 'granted') {
-        document.addEventListener('DOMContentLoaded', () => {
-            document.body.innerHTML = `
-                <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #0F172A; margin: 0;">
-                    <img src="construction_shark.png" style="max-width: 90%; max-height: 80vh;" alt="Construction Shark">
-                </div>
-            `;
-        });
-    }
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
