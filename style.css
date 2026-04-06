@@ -659,28 +659,18 @@ button:disabled:hover {
 
 /* Discord Menu Button Styles */
 .discord-btn {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px; /* Space between logo and text */
+    gap: 10px; /* Space between logo and text */
     background-color: #5865F2; /* Official Discord Blurple */
     color: white;
-    text-decoration: none;
-    font-size: 1rem;
-    font-weight: bold;
-    padding: 12px 20px;
-    border-radius: 8px; /* Assuming your game uses rounded buttons */
     border: none;
-    cursor: pointer;
-    transition: background-color 0.2s, transform 0.1s;
     margin-top: 15px; /* Adds space above the button */
-    width: 100%; /* Make it match your other buttons' width */
-    max-width: 300px; /* Optional: cap the width */
 }
 
 .discord-btn:hover {
     background-color: #4752C4; /* Darker Blurple for hover state */
-    transform: translateY(-2px); /* Slight lift effect */
 }
 
 .discord-btn:active {
