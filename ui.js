@@ -323,6 +323,7 @@ export function renderLeaderboardTable(sortedPlayers) {
             <td ${sharkStyle} ${timeCellId} ${baseTimeAttr}>${formattedTime}</td>
             <td>${player.fish_eaten}</td>
             <td>${player.sharks_evaded}</td>
+            <td>${player.yoinks || 0}</td>
         </tr>
         `;
 
