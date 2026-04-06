@@ -84,7 +84,8 @@ async function loadPlayers() {
             updateStartButton(gameState.currentPlayer, gameState.currentShark);
             updateSharkDisplay(gameState.currentShark, gameState.currentPlayer, gameState.secretWord);
             toggleScreen('player-modal', false);
-        });
+        }, gameState.currentSharkId);
+        
     } catch (e) {
         console.error(e);
     }

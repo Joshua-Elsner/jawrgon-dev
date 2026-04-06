@@ -169,8 +169,9 @@ export function updateStartButton(currentPlayerName, currentSharkName) {
 
 /**
  * Populates the player grid in the modal.
+ * Disables the button if the player is currently the active Shark.
  */
-export function renderPlayerList(players, onSelectCallback) {
+export function renderPlayerList(players, onSelectCallback, currentSharkId) {
     const grid = document.getElementById('player-list-grid');
     if (!grid) return;
 
@@ -183,11 +184,17 @@ export function renderPlayerList(players, onSelectCallback) {
 
     players.forEach(player => {
         const btn = document.createElement('button');
-        btn.textContent = player.username;
 
-        btn.addEventListener('click', () => {
-            onSelectCallback(player);
-        });
+        // Check if this player in the loop is the current active Shark
+        if (player.id === currentSharkId) {
+            btn.innerHTML = `${player.username}<br><span style="font-size: 0.75rem; color: var(--color-present);">(Active Shark)</span>`;
+            btn.disabled = true; // This triggers your CSS button:disabled rules
+        } else {
+            btn.textContent = player.username;
+            btn.addEventListener('click', () => {
+                onSelectCallback(player);
+            });
+        }
         
         grid.appendChild(btn);
     });
