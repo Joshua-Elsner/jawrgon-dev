@@ -30,6 +30,14 @@ let timerInterval = null;
 
 async function init() {
     try {
+
+         const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('discord_linked') === 'success') {
+            showToast("Discord successfully linked!");
+            // Clean up the URL so the parameter disappears
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
         await loadGameState();
         await loadLeaderboard();
         await loadPlayers();
@@ -298,6 +306,24 @@ document.getElementById('open-player-modal-btn')?.addEventListener('click', () =
 });
 document.getElementById('close-player-x')?.addEventListener('click', () => {
     toggleScreen('player-modal', false);
+});
+document.getElementById('link-discord-btn')?.addEventListener('click', () => {
+    // Prevent Guests from trying to link a Discord account
+    if (gameState.currentPlayer === "Guest" || !gameState.currentPlayerId) {
+        showToast("You must select or create a player first!");
+        return;
+    }
+
+    const clientId = '1490905676635967508'; // Replace with your Discord Client ID
+    const redirectUri = encodeURIComponent('https://okbynkairmznzcriuknd.supabase.co/functions/v1/discord-callback');
+    
+    // We attach their current game ID to the 'state' parameter!
+    const state = gameState.currentPlayerId; 
+
+    // Send them to Discord
+    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=identify&state=${state}`;
+    
+    window.location.href = discordAuthUrl;
 });
 
 // --- Create New Player ---
