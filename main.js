@@ -42,21 +42,22 @@ async function init() {
         await loadLeaderboard();
         await loadPlayers();
 
-        // NEW: Setup the live Presence tracker (Pulled outside the subscriptions block)
+        // Setup the live Presence tracker
         setupPresence((state, myId) => {
+            console.log("2. Received new presence state from Supabase:", state);
+            
             let othersGuessingCount = 0;
-
-            console.log("Live Presence State:", state);
             
             for (const key in state) {
-                if (key === myId) continue; // Don't count myself!
+                if (key === myId) continue; // Don't count myself
                 
-                // If any of this user's connections are currently guessing, tick up the count
+                // If this user is guessing, tick up the count
                 if (state[key].some(conn => conn.isGuessing)) {
                     othersGuessingCount++;
                 }
             }
             
+            console.log("3. Calculated Others Guessing:", othersGuessingCount);
             updatePresenceUI(othersGuessingCount);
         });
 
@@ -307,8 +308,12 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
     updatePresence(true);
 });
 
-document.getElementById('board-return-menu-btn')?.addEventListener('click', () => {
-    updatePresence(false);
+document.getElementById('board-return-menu-btn')?.addEventListener('click', async () => {
+    console.log("1. Back button clicked. Telling Supabase I am no longer guessing...");
+    
+    // Await this to guarantee Supabase sends the message before the screen changes
+    await updatePresence(false); 
+    
     toggleScreen('game-screen', false);
     toggleScreen('home-screen', true);
     startNewGame(); // Clears their current progress
