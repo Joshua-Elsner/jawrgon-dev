@@ -23,7 +23,7 @@ export function showToast(message, duration = 2500) {
 
     const toast = document.createElement('div');
     toast.classList.add('toast');
-    toast.textContent = message;
+    toast.innerHTML = message;
     container.appendChild(toast);
     
     setTimeout(() => {
