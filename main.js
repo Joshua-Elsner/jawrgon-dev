@@ -51,8 +51,16 @@ async function init() {
             for (const key in state) {
                 if (key === myId) continue; // Don't count myself
                 
-                // If this user is guessing, tick up the count
-                if (state[key].some(conn => conn.isGuessing)) {
+                 // Look through the array (including ghosts) and find the most recent update
+                const latestState = state[key].reduce((newest, current) => {
+                    // Fallback to 0 if updatedAt is missing on old ghosts
+                    const currentObjTime = current.updatedAt || 0; 
+                    const newestObjTime = newest.updatedAt || 0;
+                    return (currentObjTime > newestObjTime) ? current : newest;
+                }, { isGuessing: false, updatedAt: 0 });
+                
+                // Only count them if the newest command was "true"
+                if (latestState.isGuessing) {
                     othersGuessingCount++;
                 }
             }

@@ -193,11 +193,9 @@ const mySessionId = (typeof crypto.randomUUID === 'function')
     ? crypto.randomUUID() 
     : Math.random().toString(36).substring(2, 15);
 
-export function setupPresence(onSyncCallback) {
+    export function setupPresence(onSyncCallback) {
     presenceChannel = supabase.channel('jawrgon-presence', {
-        config: {
-            presence: { key: mySessionId },
-        },
+        config: { presence: { key: mySessionId } },
     });
 
     presenceChannel
@@ -207,20 +205,19 @@ export function setupPresence(onSyncCallback) {
         })
         .subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
-                // Join as NOT guessing immediately upon load
-                await presenceChannel.track({ isGuessing: false });
+                // ADDED TIMESTAMP HERE
+                await presenceChannel.track({ isGuessing: false, updatedAt: Date.now() });
             }
         });
 
-        window.addEventListener('beforeunload', () => {
-        if (presenceChannel) {
-            presenceChannel.untrack();
-        }
+    window.addEventListener('beforeunload', () => {
+        if (presenceChannel) presenceChannel.untrack();
     });
 }
 
 export async function updatePresence(isGuessing) {
     if (presenceChannel) {
-        await presenceChannel.track({ isGuessing });
+        // ADDED TIMESTAMP HERE
+        await presenceChannel.track({ isGuessing, updatedAt: Date.now() });
     }
 }
