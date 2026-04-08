@@ -1,4 +1,8 @@
 // ==========================================
+// FILE: ./main.js
+// ==========================================
+
+// ==========================================
 // IMPORTS
 // ==========================================
 import { 
@@ -6,7 +10,7 @@ import {
     claimSharkTitle, recordSharkMeal, fetchUsedWords, 
     setupRealtimeSubscriptions, createNewPlayer,
     recordYoink, sendYoinkBroadcast,
-    setupPresence, updatePresence, mySessionId
+    setupPresence, mySessionId
 } from './api.js';
 
 import { 
@@ -315,19 +319,16 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
     startNewGame();
     toggleScreen('home-screen', false);
     toggleScreen('game-screen', true);
-    updatePresence(true);
 });
 
-document.getElementById('board-return-menu-btn')?.addEventListener('click', async () => {
+document.getElementById('board-return-menu-btn')?.addEventListener('click', () => {
     console.log("1. Back button clicked. Telling Supabase I am no longer guessing...");
     
     // 1. Instantly update the UI so there is zero lag
+    // toggleScreen implicitly drops presence automatically without duplicate API calls
     toggleScreen('game-screen', false);
     toggleScreen('home-screen', true);
     startNewGame(); 
-
-    // 2. Tell Supabase in the background
-    await updatePresence(false); 
 });
 
 document.getElementById('leaderboard-btn').addEventListener('click', () => {
@@ -339,8 +340,6 @@ document.getElementById('leaderboard-btn').addEventListener('click', () => {
 document.getElementById('how-to-play-btn').addEventListener('click', () => {
     toggleScreen('how-to-play-modal', true);
 });
-
-// --- Remove old Dropdown Controls section entirely, and add this: ---
 
 // --- Player Modal Controls ---
 document.getElementById('open-player-modal-btn')?.addEventListener('click', () => {
@@ -425,7 +424,6 @@ document.getElementById('lose-menu-btn')?.addEventListener('click', () => {
     toggleScreen('game-screen', false);
     toggleScreen('home-screen', true);
     startNewGame();
-    updatePresence(false);
 });
 
 document.getElementById('lose-leaderboard-btn')?.addEventListener('click', () => {
@@ -434,7 +432,6 @@ document.getElementById('lose-leaderboard-btn')?.addEventListener('click', () =>
     loadLeaderboard();
     toggleScreen('leaderboard-screen', true);
     startNewGame();
-    updatePresence(false);
 });
 
 document.getElementById('back-to-menu-btn')?.addEventListener('click', () => {
@@ -460,7 +457,6 @@ document.getElementById('submit-new-word')?.addEventListener('click', async () =
         toggleScreen('game-screen', false);
         toggleScreen('home-screen', true);
         startNewGame();
-        updatePresence(false);
         return;
     }
 
@@ -493,7 +489,6 @@ document.getElementById('submit-new-word')?.addEventListener('click', async () =
         await loadLeaderboard();
         toggleScreen('leaderboard-screen', true);
         startNewGame();
-        updatePresence(false);
 
     } catch (error) {
         setSubmitButtonLoading(false);
