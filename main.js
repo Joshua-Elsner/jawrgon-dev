@@ -6,7 +6,7 @@ import {
     claimSharkTitle, recordSharkMeal, fetchUsedWords, 
     setupRealtimeSubscriptions, createNewPlayer,
     recordYoink, sendYoinkBroadcast,
-    setupPresence, updatePresence
+    setupPresence, updatePresence, mySessionId
 } from './api.js';
 
 import { 
@@ -42,42 +42,11 @@ async function init() {
         await loadLeaderboard();
         await loadPlayers();
 
-        // Setup the live Presence tracker
-        setupPresence((state, myId) => {
-            console.log("2. Received new presence state from Supabase:", state);
-            
-            let othersGuessingCount = 0;
-            
-            for (const key in state) {
-                if (key === myId) continue; // Don't count myself
-                
-                 // Look through the array (including ghosts) and find the most recent update
-                const latestState = state[key].reduce((newest, current) => {
-                    // Fallback to 0 if updatedAt is missing on old ghosts
-                    const currentObjTime = current.updatedAt || 0; 
-                    const newestObjTime = newest.updatedAt || 0;
-                    return (currentObjTime > newestObjTime) ? current : newest;
-                }, { isGuessing: false, updatedAt: 0 });
-                
-                // Only count them if the newest command was "true"
-                if (latestState.isGuessing) {
-                    othersGuessingCount++;
-                }
-            }
-            
-            console.log("3. Calculated Others Guessing:", othersGuessingCount);
-            updatePresenceUI(othersGuessingCount);
-        });
-
-        // Setup Realtime Subscriptions with its 3 specific callbacks
+        // 1. Core Game State Subscriptions
         setupRealtimeSubscriptions(
-            // Callback 1: Update Leaderboards & Players
-            () => { 
-                loadLeaderboard(); 
-                loadPlayers(); 
-            },
+            () => { loadLeaderboard(); loadPlayers(); },
             
-            // Callback 2: Game state change (Check for Yoinks)
+            // Callback for game state change
             async () => {             
                 const oldSecretWord = gameState.secretWord;
                 await loadGameState();
@@ -103,14 +72,48 @@ async function init() {
                 }
             },
             
-            // Callback 3: Yoink Broadcasts
+            // Callback for Yoink Broadcasts
             (payload) => {
-                // If I am the new Shark, and someone sent a broadcast meant for me...
                 if (gameState.currentPlayerId === payload.sharkId) {
                     showToast(`${payload.yoinkedName} got yoinked! Gottem!`, 3500);
                 }
             }
         );
+
+        // 2. Setup the live Presence tracker with Auto-Culling
+        let latestPresenceState = {};
+
+        // This function calculates the number based on fresh timestamps
+        function evaluatePresence() {
+            let othersGuessingCount = 0;
+            const now = Date.now();
+
+            for (const key in latestPresenceState) {
+                if (key === mySessionId) continue; // Ignore myself
+                
+                // Get this user's most recent sync data
+                const latestObj = latestPresenceState[key].reduce((newest, current) => {
+                    return (current.updatedAt || 0) > (newest.updatedAt || 0) ? current : newest;
+                }, { isGuessing: false, updatedAt: 0 });
+                
+                // CRITICAL CHECK: Are they guessing AND did they heartbeat in the last 25 seconds?
+                if (latestObj.isGuessing && (now - latestObj.updatedAt < 25000)) {
+                    othersGuessingCount++;
+                }
+            }
+            
+            updatePresenceUI(othersGuessingCount);
+        }
+
+        // Whenever the server sends data, save it and evaluate
+        setupPresence((state) => {
+            latestPresenceState = state;
+            evaluatePresence();
+        });
+
+        // Even if the server is quiet, check the data locally every 3 seconds.
+        // This instantly drops people who close tabs or lose internet!
+        setInterval(evaluatePresence, 3000);
 
     } catch (error) {
         showToast("Error connecting to server.");

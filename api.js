@@ -187,10 +187,10 @@ export function sendYoinkBroadcast(sharkId, yoinkedName) {
 // ==========================================
 
 let presenceChannel;
-let amIGuessing = false; // NEW: System memory of where you actually are
+let amIGuessing = false; 
 
-// Generate a random ID for the current browser session
-const mySessionId = (typeof crypto.randomUUID === 'function') 
+// Generate and EXPORT the ID so main.js can access it directly
+export const mySessionId = (typeof crypto.randomUUID === 'function') 
     ? crypto.randomUUID() 
     : Math.random().toString(36).substring(2, 15);
 
@@ -206,36 +206,50 @@ export function setupPresence(onSyncCallback) {
         })
         .subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
-                // FIX 1: When waking up from sleep, restore the saved state, not a hardcoded 'false'
                 await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
             }
         });
 
-    // FIX 2: Modern Mobile Lifecycle Handling
+    // --- 1. THE HEARTBEAT ---
+    // Every 10 seconds, if we are active, update our timestamp so others know we are still here
+    setInterval(() => {
+        if (amIGuessing && presenceChannel && document.visibilityState === 'visible' && navigator.onLine) {
+            presenceChannel.track({ isGuessing: true, updatedAt: Date.now() });
+        }
+    }, 10000);
+
+    // --- 2. MOBILE MINIMIZE / MAXIMIZE ---
     document.addEventListener('visibilitychange', async () => {
+        if (!presenceChannel) return;
         if (document.visibilityState === 'hidden') {
-            // App went to the background/home screen -> Instantly drop from the count
-            if (presenceChannel) {
-                await presenceChannel.track({ isGuessing: false, updatedAt: Date.now() });
-            }
+            await presenceChannel.track({ isGuessing: false, updatedAt: Date.now() });
         } else if (document.visibilityState === 'visible') {
-            // App woke back up -> Restore true state based on system memory
-            if (presenceChannel) {
-                await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
-            }
+            await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
         }
     });
 
-    // FIX 3: Backup for iOS Safari when swiping the app fully closed
-    window.addEventListener('pagehide', () => {
+    // --- 3. TAB CLOSE & CONNECTION LOSS ---
+    // If the user loses wifi, instantly update state if possible
+    window.addEventListener('offline', async () => {
+        if (presenceChannel) await presenceChannel.track({ isGuessing: false, updatedAt: Date.now() });
+    });
+    
+    // When wifi returns, restore their real state
+    window.addEventListener('online', async () => {
+        if (presenceChannel) await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
+    });
+
+    // Explicitly rip the connection down if they close the tab
+    window.addEventListener('beforeunload', () => {
         if (presenceChannel) {
             presenceChannel.untrack();
+            supabase.removeChannel(presenceChannel); 
         }
     });
 }
 
 export async function updatePresence(isGuessing) {
-    amIGuessing = isGuessing; // Save it to memory whenever the UI changes screens
+    amIGuessing = isGuessing; 
     if (presenceChannel) {
         await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
     }
