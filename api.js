@@ -2,8 +2,8 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 // Initialize the connection
-const supabaseUrl = 'https://okbynkairmznzcriuknd.supabase.co';
-const supabaseKey = 'sb_publishable_ZJGYQbdtUaABBX1lhOw8qw_Ksiw-S54';
+const supabaseUrl = 'http://127.0.0.1:54321';
+const supabaseKey = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
