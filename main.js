@@ -5,7 +5,8 @@ import {
     fetchGameState, fetchLeaderboard, fetchPlayers, 
     claimSharkTitle, recordSharkMeal, fetchUsedWords, 
     setupRealtimeSubscriptions, createNewPlayer,
-    recordYoink, sendYoinkBroadcast
+    recordYoink, sendYoinkBroadcast,
+    setupPresence, updatePresence
 } from './api.js';
 
 import { 
@@ -19,7 +20,7 @@ import {
     shakeRow, revealNextRow, updateSharkDisplay, updateStartButton, 
     renderPlayerList, toggleScreen, setupWinModal, 
     renderWordSuggestions, setSubmitButtonLoading, renderLeaderboardTable,
-    updateGuessCounter
+    updateGuessCounter, updatePresenceUI
 } from './ui.js';
 
 // ==========================================
@@ -30,8 +31,7 @@ let timerInterval = null;
 
 async function init() {
     try {
-
-         const urlParams = new URLSearchParams(window.location.search);
+        const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('discord_linked') === 'success') {
             showToast("Discord successfully linked!");
             // Clean up the URL so the parameter disappears
@@ -42,10 +42,31 @@ async function init() {
         await loadLeaderboard();
         await loadPlayers();
 
-        setupRealtimeSubscriptions(
-            () => { loadLeaderboard(); loadPlayers(); },
+        // NEW: Setup the live Presence tracker (Pulled outside the subscriptions block)
+        setupPresence((state, myId) => {
+            let othersGuessingCount = 0;
             
-            // Callback for game state change
+            for (const key in state) {
+                if (key === myId) continue; // Don't count myself!
+                
+                // If any of this user's connections are currently guessing, tick up the count
+                if (state[key].some(conn => conn.isGuessing)) {
+                    othersGuessingCount++;
+                }
+            }
+            
+            updatePresenceUI(othersGuessingCount);
+        });
+
+        // Setup Realtime Subscriptions with its 3 specific callbacks
+        setupRealtimeSubscriptions(
+            // Callback 1: Update Leaderboards & Players
+            () => { 
+                loadLeaderboard(); 
+                loadPlayers(); 
+            },
+            
+            // Callback 2: Game state change (Check for Yoinks)
             async () => {             
                 const oldSecretWord = gameState.secretWord;
                 await loadGameState();
@@ -63,15 +84,15 @@ async function init() {
                         }
                         
                         // Trust the client to report that it got yoinked
-                            recordYoink(gameState.currentSharkId);
-                            sendYoinkBroadcast(gameState.currentSharkId, gameState.currentPlayer);
+                        recordYoink(gameState.currentSharkId);
+                        sendYoinkBroadcast(gameState.currentSharkId, gameState.currentPlayer);
                         
                         startNewGame(); 
                     }
                 }
             },
             
-            // NEW 3rd Callback for Yoink Broadcasts
+            // Callback 3: Yoink Broadcasts
             (payload) => {
                 // If I am the new Shark, and someone sent a broadcast meant for me...
                 if (gameState.currentPlayerId === payload.sharkId) {
@@ -79,6 +100,7 @@ async function init() {
                 }
             }
         );
+
     } catch (error) {
         showToast("Error connecting to server.");
         console.error(error);
@@ -280,12 +302,14 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
     startNewGame();
     toggleScreen('home-screen', false);
     toggleScreen('game-screen', true);
+    updatePresence(true);
 });
 
 document.getElementById('board-return-menu-btn')?.addEventListener('click', () => {
     toggleScreen('game-screen', false);
     toggleScreen('home-screen', true);
     startNewGame(); // Clears their current progress
+    updatePresence(false);
 });
 
 document.getElementById('leaderboard-btn').addEventListener('click', () => {
@@ -383,6 +407,7 @@ document.getElementById('lose-menu-btn')?.addEventListener('click', () => {
     toggleScreen('game-screen', false);
     toggleScreen('home-screen', true);
     startNewGame();
+    updatePresence(false);
 });
 
 document.getElementById('lose-leaderboard-btn')?.addEventListener('click', () => {
@@ -391,6 +416,7 @@ document.getElementById('lose-leaderboard-btn')?.addEventListener('click', () =>
     loadLeaderboard();
     toggleScreen('leaderboard-screen', true);
     startNewGame();
+    updatePresence(false);
 });
 
 document.getElementById('back-to-menu-btn')?.addEventListener('click', () => {
@@ -416,6 +442,7 @@ document.getElementById('submit-new-word')?.addEventListener('click', async () =
         toggleScreen('game-screen', false);
         toggleScreen('home-screen', true);
         startNewGame();
+        updatePresence(false);
         return;
     }
 
@@ -448,6 +475,7 @@ document.getElementById('submit-new-word')?.addEventListener('click', async () =
         await loadLeaderboard();
         toggleScreen('leaderboard-screen', true);
         startNewGame();
+        updatePresence(false);
 
     } catch (error) {
         setSubmitButtonLoading(false);
