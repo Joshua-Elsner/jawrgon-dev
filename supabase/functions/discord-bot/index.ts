@@ -67,7 +67,7 @@ serve(async (req) => {
          const newShark = players.find(p => p.id === newState.current_shark_id);
          
          if (oldShark) {
-             oldSharkName = `**${oldShark.username}**`;
+             oldSharkName = `${oldShark.username}`;
              // Ping the victim if they have Discord linked!
              if (oldShark.discord_id && oldShark.wants_mentions) {
                  oldSharkName = `<@${oldShark.discord_id}>`; 
