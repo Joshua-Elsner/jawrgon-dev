@@ -211,6 +211,12 @@ export function setupPresence(onSyncCallback) {
                 await presenceChannel.track({ isGuessing: false });
             }
         });
+
+        window.addEventListener('beforeunload', () => {
+        if (presenceChannel) {
+            presenceChannel.untrack();
+        }
+    });
 }
 
 export async function updatePresence(isGuessing) {
