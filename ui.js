@@ -338,3 +338,25 @@ export function updateGuessCounter(currentRow) {
         counter.textContent = `Guess ${currentRow + 1}/6`;
     }
 }
+
+// ==========================================
+// PRESENCE UI
+// ==========================================
+
+export function updatePresenceUI(count) {
+    const dot = document.getElementById('presence-dot');
+    const text = document.getElementById('presence-count');
+    
+    if (!dot || !text) return;
+    
+    if (count > 0) {
+        dot.classList.remove('inactive');
+        dot.classList.add('active');
+        // Pluralize properly (1 Other Guessing vs 2 Others Guessing)
+        text.textContent = `${count} Other${count === 1 ? '' : 's'} Guessing`;
+    } else {
+        dot.classList.remove('active');
+        dot.classList.add('inactive');
+        text.textContent = `0 Others Guessing`;
+    }
+}
