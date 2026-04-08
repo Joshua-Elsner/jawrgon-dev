@@ -366,3 +366,4 @@ export function updatePresenceUI(count) {
         dot.classList.add('inactive');
         text.textContent = `0 Others Guessing`;
     }
+}
