@@ -187,7 +187,7 @@ export function sendYoinkBroadcast(sharkId, yoinkedName) {
 // ==========================================
 
 let presenceChannel;
-let amIGuessing = false; 
+let amIGuessing = false; // System memory of where you actually are
 
 // Generate and EXPORT the ID so main.js can access it directly
 export const mySessionId = (typeof crypto.randomUUID === 'function') 
@@ -206,11 +206,12 @@ export function setupPresence(onSyncCallback) {
         })
         .subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
+                // When waking up from sleep, restore the saved state
                 await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
             }
         });
 
-    // --- 1. THE HEARTBEAT ---
+    // --- 1. THE HEARTBEAT (The Failsafe) ---
     // Every 10 seconds, if we are active, update our timestamp so others know we are still here
     setInterval(() => {
         if (amIGuessing && presenceChannel && document.visibilityState === 'visible' && navigator.onLine) {
@@ -218,17 +219,34 @@ export function setupPresence(onSyncCallback) {
         }
     }, 10000);
 
-    // --- 2. MOBILE MINIMIZE / MAXIMIZE ---
+    // --- 2. MODERN MOBILE LIFECYCLE (Instant Drop) ---
     document.addEventListener('visibilitychange', async () => {
         if (!presenceChannel) return;
         if (document.visibilityState === 'hidden') {
+            // App went to the background/home screen -> Instantly drop from the count
             await presenceChannel.track({ isGuessing: false, updatedAt: Date.now() });
         } else if (document.visibilityState === 'visible') {
+            // App woke back up -> Restore true state based on system memory
             await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
         }
     });
 
-    // --- 3. TAB CLOSE & CONNECTION LOSS ---
+    // --- 3. TAB CLOSE & CONNECTION LOSS (Instant Drops) ---
+    // Backup for iOS Safari when swiping the app fully closed
+    window.addEventListener('pagehide', () => {
+        if (presenceChannel) {
+            presenceChannel.untrack();
+        }
+    });
+
+    // Explicitly rip the connection down if they close the tab (Desktop)
+    window.addEventListener('beforeunload', () => {
+        if (presenceChannel) {
+            presenceChannel.untrack();
+            supabase.removeChannel(presenceChannel); 
+        }
+    });
+
     // If the user loses wifi, instantly update state if possible
     window.addEventListener('offline', async () => {
         if (presenceChannel) await presenceChannel.track({ isGuessing: false, updatedAt: Date.now() });
@@ -238,18 +256,10 @@ export function setupPresence(onSyncCallback) {
     window.addEventListener('online', async () => {
         if (presenceChannel) await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
     });
-
-    // Explicitly rip the connection down if they close the tab
-    window.addEventListener('beforeunload', () => {
-        if (presenceChannel) {
-            presenceChannel.untrack();
-            supabase.removeChannel(presenceChannel); 
-        }
-    });
 }
 
 export async function updatePresence(isGuessing) {
-    amIGuessing = isGuessing; 
+    amIGuessing = isGuessing; // Save it to memory whenever the UI changes screens
     if (presenceChannel) {
         await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
     }
