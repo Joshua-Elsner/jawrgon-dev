@@ -45,6 +45,8 @@ async function init() {
         // NEW: Setup the live Presence tracker (Pulled outside the subscriptions block)
         setupPresence((state, myId) => {
             let othersGuessingCount = 0;
+
+            console.log("Live Presence State:", state);
             
             for (const key in state) {
                 if (key === myId) continue; // Don't count myself!
@@ -306,10 +308,10 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
 });
 
 document.getElementById('board-return-menu-btn')?.addEventListener('click', () => {
+    updatePresence(false);
     toggleScreen('game-screen', false);
     toggleScreen('home-screen', true);
     startNewGame(); // Clears their current progress
-    updatePresence(false);
 });
 
 document.getElementById('leaderboard-btn').addEventListener('click', () => {
