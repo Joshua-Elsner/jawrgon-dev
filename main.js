@@ -74,7 +74,7 @@ async function init() {
             // Callback for Yoink Broadcasts
             (payload) => {
                 if (gameState.currentPlayerId === payload.sharkId) {
-                    showToast(`${payload.yoinkedName} got yoinked! Gottem!`, 3500);
+                    showToast(`<span class="toast-highlight">${payload.yoinkedName}</span> got yoinked! Gottem!`, 3500);
                 }
             }
         );
