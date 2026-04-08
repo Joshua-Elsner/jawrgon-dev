@@ -187,13 +187,14 @@ export function sendYoinkBroadcast(sharkId, yoinkedName) {
 // ==========================================
 
 let presenceChannel;
+let amIGuessing = false; // NEW: System memory of where you actually are
 
-// Generate a random ID for the current browser session so we don't count ourselves
+// Generate a random ID for the current browser session
 const mySessionId = (typeof crypto.randomUUID === 'function') 
     ? crypto.randomUUID() 
     : Math.random().toString(36).substring(2, 15);
 
-    export function setupPresence(onSyncCallback) {
+export function setupPresence(onSyncCallback) {
     presenceChannel = supabase.channel('jawrgon-presence', {
         config: { presence: { key: mySessionId } },
     });
@@ -205,19 +206,37 @@ const mySessionId = (typeof crypto.randomUUID === 'function')
         })
         .subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
-                // ADDED TIMESTAMP HERE
-                await presenceChannel.track({ isGuessing: false, updatedAt: Date.now() });
+                // FIX 1: When waking up from sleep, restore the saved state, not a hardcoded 'false'
+                await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
             }
         });
 
-    window.addEventListener('beforeunload', () => {
-        if (presenceChannel) presenceChannel.untrack();
+    // FIX 2: Modern Mobile Lifecycle Handling
+    document.addEventListener('visibilitychange', async () => {
+        if (document.visibilityState === 'hidden') {
+            // App went to the background/home screen -> Instantly drop from the count
+            if (presenceChannel) {
+                await presenceChannel.track({ isGuessing: false, updatedAt: Date.now() });
+            }
+        } else if (document.visibilityState === 'visible') {
+            // App woke back up -> Restore true state based on system memory
+            if (presenceChannel) {
+                await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
+            }
+        }
+    });
+
+    // FIX 3: Backup for iOS Safari when swiping the app fully closed
+    window.addEventListener('pagehide', () => {
+        if (presenceChannel) {
+            presenceChannel.untrack();
+        }
     });
 }
 
 export async function updatePresence(isGuessing) {
+    amIGuessing = isGuessing; // Save it to memory whenever the UI changes screens
     if (presenceChannel) {
-        // ADDED TIMESTAMP HERE
-        await presenceChannel.track({ isGuessing, updatedAt: Date.now() });
+        await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
     }
 }
