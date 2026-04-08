@@ -188,7 +188,7 @@ export function renderPlayerList(players, onSelectCallback, currentSharkId) {
 
         // Check if this player in the loop is the current active Shark
         if (player.id === currentSharkId) {
-            btn.innerHTML = `${player.username}<br><span style="font-size: 0.75rem; color: var(--color-present);">(Active Shark)</span>`;
+            btn.innerHTML = `${player.username}<br><span style="font-size: 0.75rem; color: var(--color-present);">(Current Shark)</span>`;
             btn.disabled = true; // This triggers your CSS button:disabled rules
         } else {
             btn.textContent = player.username;
