@@ -99,12 +99,15 @@ async function init() {
                 
                 let localData = localPresenceData[key];
 
-                // If we haven't seen them before, OR they broadcasted a NEW timestamp
-                if (!localData || localData.foreignUpdatedAt !== latestObj.updatedAt) {
+                // NEW FIX: Accept the update if the timestamp is newer OR if their true/false state flipped!
+                if (!localData || 
+                    localData.foreignUpdatedAt !== latestObj.updatedAt || 
+                    localData.isGuessing !== latestObj.isGuessing) {
+                    
                     localData = {
                         isGuessing: latestObj.isGuessing,
                         foreignUpdatedAt: latestObj.updatedAt,
-                        localReceivedAt: now // Stamp it using OUR trusted clock!
+                        localReceivedAt: now 
                     };
                     localPresenceData[key] = localData;
                 }
