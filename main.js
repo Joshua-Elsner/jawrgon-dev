@@ -3,7 +3,7 @@
 // ==========================================
 import {
     fetchGameState, fetchLeaderboard, fetchPlayers,
-    claimSharkTitle, recordSharkMeal, fetchUsedWords,
+    claimSharkTitle, recordSharkMeal, checkWordValidity, fetchWordSuggestions,
     setupRealtimeSubscriptions, createNewPlayer,
     recordYoink, sendYoinkBroadcast,
     setupPresence, updatePresence, mySessionId
@@ -229,7 +229,9 @@ function handleKeyInput(letter) {
 async function submitGuess() {
     if (gameState.currentGuess.length !== 5) return;
 
-    if (!isValidWord(gameState.currentGuess)) {
+    // Wait for the database to confirm it's a real word
+    const isValid = await isValidWord(gameState.currentGuess);
+    if (!isValid) {
         shakeRow(gameState.currentRow);
         showToast("Not in word list");
         return;
@@ -262,27 +264,10 @@ async function handleWin() {
 
     if (gameState.currentPlayer !== "Guest") {
         try {
-            const usedWords = await fetchUsedWords();
-
-            // FIX: Access the global variables directly rather than through the window object
-            let wordBank = [];
-            if (typeof COMMON_WORDS !== 'undefined') {
-                wordBank = COMMON_WORDS;
-            } else if (typeof VALID_WORDS !== 'undefined') {
-                wordBank = VALID_WORDS;
-            }
-
-            const unusedWords = wordBank.filter(word => !usedWords.includes(word.toUpperCase()));
-
-            if (unusedWords.length >= 2) {
-                // Get two unique random indices
-                const randomIndices = [];
-                while (randomIndices.length < 2) {
-                    let r = Math.floor(Math.random() * unusedWords.length);
-                    if (!randomIndices.includes(r)) randomIndices.push(r);
-                }
-
-                renderWordSuggestions(unusedWords[randomIndices[0]].toUpperCase(), unusedWords[randomIndices[1]].toUpperCase());
+            // Simply ask the database for 2 words! No client filtering needed.
+            const suggestions = await fetchWordSuggestions();
+            if (suggestions && suggestions.length === 2) {
+                renderWordSuggestions(suggestions[0], suggestions[1]);
             }
         } catch (error) {
             console.error("Failed to load word suggestions:", error);
@@ -489,12 +474,15 @@ document.getElementById('submit-new-word')?.addEventListener('click', async () =
         return;
     }
 
-    if (!isValidWord(newWord)) {
+    setSubmitButtonLoading(true); // Put this BEFORE the DB check so the UI feels responsive
+
+    // Await the async validation
+    const isValid = await isValidWord(newWord);
+    if (!isValid) {
         showToast("Not in word list");
+        setSubmitButtonLoading(false);
         return;
     }
-
-    setSubmitButtonLoading(true);
 
     try {
         await claimSharkTitle(gameState.currentPlayerId, gameState.currentGuess, newWord);

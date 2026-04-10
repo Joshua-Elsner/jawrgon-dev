@@ -101,19 +101,32 @@ export async function claimSharkTitle(winnerId, guessedWord, newSecretWord) {
 }
 
 /**
- * Fetches the list of words that have already been used in previous games
- * @returns {Promise<Array>} Array of string words
+ * Checks if a word exists in the remote dictionary
  */
-export async function fetchUsedWords() {
-    const { data, error } = await supabase.from('used_words').select('word');
+export async function checkWordValidity(word) {
+    const { data, error } = await supabase
+        .from('dictionary')
+        .select('word')
+        .eq('word', word.toUpperCase())
+        .single();
     
+    // If we find a row, it's valid. If not, it's invalid.
+    if (error && error.code === 'PGRST116') return false; // Not found
+    if (error) throw error;
+    
+    return !!data;
+}
+
+/**
+ * Asks the database to run the RPC and return 2 valid, unused words
+ */
+export async function fetchWordSuggestions() {
+    const { data, error } = await supabase.rpc('get_word_suggestions');
     if (error) {
-        console.error("Error fetching used words:", error);
+        console.error("Error fetching word suggestions:", error);
         throw error;
     }
-
-    // Return just a clean array of strings, converted to uppercase
-    return data ? data.map(row => row.word.toUpperCase()) : [];
+    return data ? data.map(row => row.word) : [];
 }
 
 /**

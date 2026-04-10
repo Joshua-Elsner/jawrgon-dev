@@ -2,6 +2,8 @@
 // CENTRAL STATE
 // ==========================================
 
+import { checkWordValidity } from './api.js';
+
 export const gameState = {
     // Database sync data
     secretWord: "",
@@ -87,16 +89,12 @@ export function advanceRow() {
 // ==========================================
 
 /**
- * Checks if a word exists in the dictionary loaded from words.js
+ * Checks if a word exists in the remote dictionary database
  * @param {string} word - The 5 letter word to check
- * @returns {boolean}
+ * @returns {Promise<boolean>}
  */
-export function isValidWord(word) {
-    // FIX: Check global variable directly without `window.` object attachment
-    if (typeof VALID_WORDS !== 'undefined') {
-        return VALID_WORDS.includes(word.toUpperCase());
-    }
-    return true; // Fallback if words array failed to load
+export async function isValidWord(word) {
+    return await checkWordValidity(word);
 }
 
 /**
