@@ -2,8 +2,8 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 // Initialize the connection
-const supabaseUrl = 'https://okbynkairmznzcriuknd.supabase.co';
-const supabaseKey = 'sb_publishable_ZJGYQbdtUaABBX1lhOw8qw_Ksiw-S54';
+const supabaseUrl = 'http://127.0.0.1:54321';
+const supabaseKey = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -101,19 +101,32 @@ export async function claimSharkTitle(winnerId, guessedWord, newSecretWord) {
 }
 
 /**
- * Fetches the list of words that have already been used in previous games
- * @returns {Promise<Array>} Array of string words
+ * Checks if a word exists in the remote dictionary
  */
-export async function fetchUsedWords() {
-    const { data, error } = await supabase.from('used_words').select('word');
+export async function checkWordValidity(word) {
+    const { data, error } = await supabase
+        .from('dictionary')
+        .select('word')
+        .eq('word', word.toUpperCase())
+        .single();
     
+    // If we find a row, it's valid. If not, it's invalid.
+    if (error && error.code === 'PGRST116') return false; // Not found
+    if (error) throw error;
+    
+    return !!data;
+}
+
+/**
+ * Asks the database to run the RPC and return 2 valid, unused words
+ */
+export async function fetchWordSuggestions() {
+    const { data, error } = await supabase.rpc('get_word_suggestions');
     if (error) {
-        console.error("Error fetching used words:", error);
+        console.error("Error fetching word suggestions:", error);
         throw error;
     }
-
-    // Return just a clean array of strings, converted to uppercase
-    return data ? data.map(row => row.word.toUpperCase()) : [];
+    return data ? data.map(row => row.word) : [];
 }
 
 /**
@@ -211,32 +224,30 @@ export function setupPresence(onSyncCallback) {
             }
         });
 
-    // --- 1. THE HEARTBEAT (The Failsafe) ---
-    // Every 10 seconds, if we are active, update our timestamp so others know we are still here
+        // --- 1. THE HEARTBEAT (The Failsafe) ---
     setInterval(() => {
-        if (amIGuessing && presenceChannel && document.visibilityState === 'visible' && navigator.onLine) {
-            presenceChannel.track({ isGuessing: true, updatedAt: Date.now() });
+        if (amIGuessing && document.visibilityState === 'visible' && navigator.onLine) {
+            updatePresence(true); // Now uses the safe queue!
         }
     }, 10000);
 
-    // --- 2. MODERN MOBILE LIFECYCLE (Instant Drop) ---
-    document.addEventListener('visibilitychange', async () => {
+    // --- 2. MODERN MOBILE LIFECYCLE ---
+    document.addEventListener('visibilitychange', () => {
         if (!presenceChannel) return;
         if (document.visibilityState === 'hidden') {
-            // App went to the background/home screen -> Instantly drop from the count
-            await presenceChannel.track({ isGuessing: false, updatedAt: Date.now() });
+            updatePresence(false);
         } else if (document.visibilityState === 'visible') {
-            // App woke back up -> Restore true state based on system memory
-            await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
+            updatePresence(amIGuessing);
         }
     });
 
-    // --- 3. TAB CLOSE & CONNECTION LOSS (Instant Drops) ---
-    // Backup for iOS Safari when swiping the app fully closed
-    window.addEventListener('pagehide', () => {
-        if (presenceChannel) {
-            presenceChannel.untrack();
-        }
+    // --- 3. CONNECTION LOSS ---
+    window.addEventListener('offline', () => {
+        if (presenceChannel) updatePresence(false);
+    });
+    
+    window.addEventListener('online', () => {
+        if (presenceChannel) updatePresence(amIGuessing);
     });
 
     // Explicitly rip the connection down if they close the tab (Desktop)
@@ -258,9 +269,55 @@ export function setupPresence(onSyncCallback) {
     });
 }
 
+// ==========================================
+// PRESENCE QUEUE & MONOTONIC CLOCK
+// Defeats Millisecond Collisions & State Tearing
+// ==========================================
+
+let isPresenceUpdating = false;
+let presenceQueue = null;
+let lastPresenceTimestamp = 0;
+
+// Guarantees every timestamp is chronologically larger than the last!
+function getPresenceTimestamp() {
+    let now = Date.now();
+    if (now <= lastPresenceTimestamp) {
+        now = lastPresenceTimestamp + 1;
+    }
+    lastPresenceTimestamp = now;
+    return now;
+}
+
 export async function updatePresence(isGuessing) {
-    amIGuessing = isGuessing; // Save it to memory whenever the UI changes screens
-    if (presenceChannel) {
-        await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
+    amIGuessing = isGuessing; // Instantly save to memory for lifecycles
+
+    if (!presenceChannel) return;
+
+    // 1. If we are talking to the server, take a ticket and wait!
+    if (isPresenceUpdating) {
+        presenceQueue = isGuessing;
+        return;
+    }
+
+    isPresenceUpdating = true;
+
+    // 2. Capture the exact state and a safe, unique timestamp
+    const stateToTransmit = isGuessing;
+    const safeTimestamp = getPresenceTimestamp();
+
+    try {
+        await presenceChannel.track({ isGuessing: stateToTransmit, updatedAt: safeTimestamp });
+    } catch (e) {
+        console.error("Presence tracking failed:", e);
+    } finally {
+        isPresenceUpdating = false;
+        
+        // 3. If the user spam-clicked while we were transmitting, 
+        // the queue holds their final destination. Send it now!
+        if (presenceQueue !== null) {
+            const nextState = presenceQueue;
+            presenceQueue = null;
+            updatePresence(nextState);
+        }
     }
 }

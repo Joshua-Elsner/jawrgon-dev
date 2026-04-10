@@ -209,12 +209,6 @@ export function toggleScreen(screenId, show) {
     const screen = document.getElementById(screenId);
     if (screen) {
         show ? screen.classList.remove('hidden') : screen.classList.add('hidden');
-        
-        // AUTOMATIC PRESENCE TRACKING
-        // If the screen being toggled is the game board, update their presence immediately!
-        if (screenId === 'game-screen') {
-            updatePresence(show);
-        }
     }
 }
 
