@@ -1,24 +1,24 @@
 // ==========================================
 // IMPORTS
 // ==========================================
-import { 
-    fetchGameState, fetchLeaderboard, fetchPlayers, 
-    claimSharkTitle, recordSharkMeal, fetchUsedWords, 
+import {
+    fetchGameState, fetchLeaderboard, fetchPlayers,
+    claimSharkTitle, recordSharkMeal, fetchUsedWords,
     setupRealtimeSubscriptions, createNewPlayer,
     recordYoink, sendYoinkBroadcast,
     setupPresence, updatePresence, mySessionId
 } from './api.js';
 
-import { 
-    gameState, setPlayer, resetGameState, addLetterToState, 
-    deleteLetterFromState, advanceRow, isValidWord, 
-    evaluateGuess, processLeaderboardData 
+import {
+    gameState, setPlayer, resetGameState, addLetterToState,
+    deleteLetterFromState, advanceRow, isValidWord,
+    evaluateGuess, processLeaderboardData
 } from './game.js';
 
-import { 
-    showToast, resetBoardUI, updateTileText, paintRowStatuses, 
-    shakeRow, revealNextRow, updateSharkDisplay, updateStartButton, 
-    renderPlayerList, toggleScreen, setupWinModal, 
+import {
+    showToast, resetBoardUI, updateTileText, paintRowStatuses,
+    shakeRow, revealNextRow, updateSharkDisplay, updateStartButton,
+    renderPlayerList, toggleScreen, setupWinModal,
     renderWordSuggestions, setSubmitButtonLoading, renderLeaderboardTable,
     updateGuessCounter, updatePresenceUI
 } from './ui.js';
@@ -45,9 +45,9 @@ async function init() {
         // 1. Core Game State Subscriptions
         setupRealtimeSubscriptions(
             () => { loadLeaderboard(); loadPlayers(); },
-            
+
             // Callback for game state change
-            async () => {             
+            async () => {
                 const oldSecretWord = gameState.secretWord;
                 await loadGameState();
 
@@ -61,16 +61,16 @@ async function init() {
                         if (isSettingWord) {
                             toggleScreen('win-modal', false);
                         }
-                        
+
                         // Trust the client to report that it got yoinked
                         recordYoink(gameState.currentSharkId);
                         sendYoinkBroadcast(gameState.currentSharkId, gameState.currentPlayer);
-                        
-                        startNewGame(); 
+
+                        startNewGame();
                     }
                 }
             },
-            
+
             // Callback for Yoink Broadcasts
             (payload) => {
                 if (gameState.currentPlayerId === payload.sharkId) {
@@ -81,22 +81,39 @@ async function init() {
 
         // 2. Setup the live Presence tracker with Auto-Culling
         let latestPresenceState = {};
+        
+        // NEW: Store the local time we received their last message to defeat Clock Drift
+        let localPresenceData = {}; 
 
-        // This function calculates the number based on fresh timestamps
         function evaluatePresence() {
             let othersGuessingCount = 0;
             const now = Date.now();
 
             for (const key in latestPresenceState) {
-                if (key === mySessionId) continue; // Ignore myself
+                if (key === mySessionId) continue; 
                 
                 // Get this user's most recent sync data
                 const latestObj = latestPresenceState[key].reduce((newest, current) => {
                     return (current.updatedAt || 0) > (newest.updatedAt || 0) ? current : newest;
                 }, { isGuessing: false, updatedAt: 0 });
                 
-                // CRITICAL CHECK: Are they guessing AND did they heartbeat in the last 25 seconds?
-                if (latestObj.isGuessing && (now - latestObj.updatedAt < 25000)) {
+                let localData = localPresenceData[key];
+
+                // NEW FIX: Accept the update if the timestamp is newer OR if their true/false state flipped!
+                if (!localData || 
+                    localData.foreignUpdatedAt !== latestObj.updatedAt || 
+                    localData.isGuessing !== latestObj.isGuessing) {
+                    
+                    localData = {
+                        isGuessing: latestObj.isGuessing,
+                        foreignUpdatedAt: latestObj.updatedAt,
+                        localReceivedAt: now 
+                    };
+                    localPresenceData[key] = localData;
+                }
+
+                // Evaluate using ONLY our local clock to prevent "Ghost Yoink" time drift
+                if (localData.isGuessing && (now - localData.localReceivedAt < 25000)) {
                     othersGuessingCount++;
                 }
             }
@@ -113,7 +130,7 @@ async function init() {
         // Even if the server is quiet, check the data locally every 3 seconds.
         // This instantly drops people who close tabs or lose internet!
         setInterval(evaluatePresence, 3000);
-
+       
     } catch (error) {
         showToast("Error connecting to server.");
         console.error(error);
@@ -123,7 +140,7 @@ async function init() {
 async function loadPlayers() {
     try {
         const players = await fetchPlayers();
-        
+
         // If the current player isn't "Guest", check if their ID still exists in the database
         if (gameState.currentPlayerId) {
             const playerStillExists = players.some(p => p.id === gameState.currentPlayerId);
@@ -140,7 +157,7 @@ async function loadPlayers() {
             updateSharkDisplay(gameState.currentShark, gameState.currentPlayer, gameState.secretWord);
             toggleScreen('player-modal', false);
         }, gameState.currentSharkId);
-        
+
     } catch (e) {
         console.error(e);
     }
@@ -246,7 +263,7 @@ async function handleWin() {
     if (gameState.currentPlayer !== "Guest") {
         try {
             const usedWords = await fetchUsedWords();
-            
+
             // FIX: Access the global variables directly rather than through the window object
             let wordBank = [];
             if (typeof COMMON_WORDS !== 'undefined') {
@@ -260,11 +277,11 @@ async function handleWin() {
             if (unusedWords.length >= 2) {
                 // Get two unique random indices
                 const randomIndices = [];
-                while(randomIndices.length < 2){
+                while (randomIndices.length < 2) {
                     let r = Math.floor(Math.random() * unusedWords.length);
-                    if(!randomIndices.includes(r)) randomIndices.push(r);
+                    if (!randomIndices.includes(r)) randomIndices.push(r);
                 }
-                
+
                 renderWordSuggestions(unusedWords[randomIndices[0]].toUpperCase(), unusedWords[randomIndices[1]].toUpperCase());
             }
         } catch (error) {
@@ -299,7 +316,7 @@ document.querySelectorAll('.key').forEach(key => {
 
 document.addEventListener('keydown', (e) => {
     if (gameState.isGameOver) return;
-    
+
     if (e.key === 'Enter') {
         handleKeyInput('ENTER');
     } else if (e.key === 'Backspace') {
@@ -320,14 +337,14 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
 
 document.getElementById('board-return-menu-btn')?.addEventListener('click', async () => {
     console.log("1. Back button clicked. Telling Supabase I am no longer guessing...");
-    
+
     // 1. Instantly update the UI so there is zero lag
     toggleScreen('game-screen', false);
     toggleScreen('home-screen', true);
-    startNewGame(); 
+    startNewGame();
 
     // 2. Tell Supabase in the background
-    await updatePresence(false); 
+    await updatePresence(false);
 });
 
 document.getElementById('leaderboard-btn').addEventListener('click', () => {
@@ -360,16 +377,16 @@ document.getElementById('link-discord-btn')?.addEventListener('click', () => {
     }
 
     console.log("3. Player is selected. Building the Discord URL...");
-    
+
     // Make sure you put your REAL Discord Client ID here!
-    const clientId = '1490905676635967508'; 
+    const clientId = '1490905676635967508';
     const redirectUri = encodeURIComponent('https://okbynkairmznzcriuknd.supabase.co/functions/v1/discord-callback');
-    const state = gameState.currentPlayerId; 
+    const state = gameState.currentPlayerId;
 
     const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=identify&state=${state}`;
-    
+
     console.log("🚀 4. Redirecting browser to:", discordAuthUrl);
-    
+
     // This is the line that actually changes the page
     window.location.href = discordAuthUrl;
 });
@@ -392,16 +409,16 @@ document.getElementById('create-player-btn')?.addEventListener('click', async ()
     // 2. Database Creation
     try {
         const newPlayer = await createNewPlayer(newUsername);
-        
+
         // 3. Update State & UI
         setPlayer(newPlayer.username, newPlayer.id);
         updateStartButton(gameState.currentPlayer, gameState.currentShark);
         updateSharkDisplay(gameState.currentShark, gameState.currentPlayer, gameState.secretWord);
-        
+
         input.value = ""; // Clear input
         toggleScreen('player-modal', false);
         showToast(`Welcome, ${newPlayer.username}!`);
-        
+
         await loadPlayers(); // Refresh list
 
     } catch (error) {
@@ -481,15 +498,15 @@ document.getElementById('submit-new-word')?.addEventListener('click', async () =
 
     try {
         await claimSharkTitle(gameState.currentPlayerId, gameState.currentGuess, newWord);
-        
+
         // Success!
         gameState.currentSharkId = gameState.currentPlayerId;
         gameState.secretWord = newWord;
-        
+
         setSubmitButtonLoading(false);
         toggleScreen('win-modal', false);
         toggleScreen('game-screen', false);
-        
+
         await loadLeaderboard();
         toggleScreen('leaderboard-screen', true);
         startNewGame();

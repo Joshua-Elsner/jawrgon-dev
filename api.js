@@ -211,32 +211,30 @@ export function setupPresence(onSyncCallback) {
             }
         });
 
-    // --- 1. THE HEARTBEAT (The Failsafe) ---
-    // Every 10 seconds, if we are active, update our timestamp so others know we are still here
+        // --- 1. THE HEARTBEAT (The Failsafe) ---
     setInterval(() => {
-        if (amIGuessing && presenceChannel && document.visibilityState === 'visible' && navigator.onLine) {
-            presenceChannel.track({ isGuessing: true, updatedAt: Date.now() });
+        if (amIGuessing && document.visibilityState === 'visible' && navigator.onLine) {
+            updatePresence(true); // Now uses the safe queue!
         }
     }, 10000);
 
-    // --- 2. MODERN MOBILE LIFECYCLE (Instant Drop) ---
-    document.addEventListener('visibilitychange', async () => {
+    // --- 2. MODERN MOBILE LIFECYCLE ---
+    document.addEventListener('visibilitychange', () => {
         if (!presenceChannel) return;
         if (document.visibilityState === 'hidden') {
-            // App went to the background/home screen -> Instantly drop from the count
-            await presenceChannel.track({ isGuessing: false, updatedAt: Date.now() });
+            updatePresence(false);
         } else if (document.visibilityState === 'visible') {
-            // App woke back up -> Restore true state based on system memory
-            await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
+            updatePresence(amIGuessing);
         }
     });
 
-    // --- 3. TAB CLOSE & CONNECTION LOSS (Instant Drops) ---
-    // Backup for iOS Safari when swiping the app fully closed
-    window.addEventListener('pagehide', () => {
-        if (presenceChannel) {
-            presenceChannel.untrack();
-        }
+    // --- 3. CONNECTION LOSS ---
+    window.addEventListener('offline', () => {
+        if (presenceChannel) updatePresence(false);
+    });
+    
+    window.addEventListener('online', () => {
+        if (presenceChannel) updatePresence(amIGuessing);
     });
 
     // Explicitly rip the connection down if they close the tab (Desktop)
@@ -258,9 +256,55 @@ export function setupPresence(onSyncCallback) {
     });
 }
 
+// ==========================================
+// PRESENCE QUEUE & MONOTONIC CLOCK
+// Defeats Millisecond Collisions & State Tearing
+// ==========================================
+
+let isPresenceUpdating = false;
+let presenceQueue = null;
+let lastPresenceTimestamp = 0;
+
+// Guarantees every timestamp is chronologically larger than the last!
+function getPresenceTimestamp() {
+    let now = Date.now();
+    if (now <= lastPresenceTimestamp) {
+        now = lastPresenceTimestamp + 1;
+    }
+    lastPresenceTimestamp = now;
+    return now;
+}
+
 export async function updatePresence(isGuessing) {
-    amIGuessing = isGuessing; // Save it to memory whenever the UI changes screens
-    if (presenceChannel) {
-        await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
+    amIGuessing = isGuessing; // Instantly save to memory for lifecycles
+
+    if (!presenceChannel) return;
+
+    // 1. If we are talking to the server, take a ticket and wait!
+    if (isPresenceUpdating) {
+        presenceQueue = isGuessing;
+        return;
+    }
+
+    isPresenceUpdating = true;
+
+    // 2. Capture the exact state and a safe, unique timestamp
+    const stateToTransmit = isGuessing;
+    const safeTimestamp = getPresenceTimestamp();
+
+    try {
+        await presenceChannel.track({ isGuessing: stateToTransmit, updatedAt: safeTimestamp });
+    } catch (e) {
+        console.error("Presence tracking failed:", e);
+    } finally {
+        isPresenceUpdating = false;
+        
+        // 3. If the user spam-clicked while we were transmitting, 
+        // the queue holds their final destination. Send it now!
+        if (presenceQueue !== null) {
+            const nextState = presenceQueue;
+            presenceQueue = null;
+            updatePresence(nextState);
+        }
     }
 }

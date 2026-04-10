@@ -1,60 +1,100 @@
+// tests/presence.spec.js
 const { test, expect } = require('@playwright/test');
 
-test('Presence indicator handles multiple joins, pluralization, and disconnects', async ({ browser }) => {
-  // 1. Set up THREE isolated browsers
-  const contextA = await browser.newContext();
-  const contextB = await browser.newContext();
-  const contextC = await browser.newContext();
+test.describe('Elaborate Presence, Lifecycle & Clock Drift Diagnostics', () => {
 
-  const pageA = await contextA.newPage();
-  const pageB = await contextB.newPage();
-  const pageC = await contextC.newPage();
+  test('Tracks players through joining, backgrounding, network drops, and time drift', async ({ browser }) => {
+    test.setTimeout(60000); // 60 seconds allowed for heartbeat culling
 
-  // Helper function so we don't write the same 7 lines of login code three times!
-  async function loginAndJoin(page, playerName) {
-    await page.goto('http://127.0.0.1:8080');
-    await page.click('#open-player-modal-btn');
-    await page.fill('#new-player-input', playerName);
-    await page.click('#create-player-btn');
-    await page.waitForTimeout(500);
-    await page.click('#start-game-btn');
+    const context1 = await browser.newContext();
+    const context2 = await browser.newContext();
+    const context3 = await browser.newContext();
+
+    const p1 = await context1.newPage();
+    const p2 = await context2.newPage();
+    const p3 = await context3.newPage();
+
+    // 🚨 CLOCK DRIFT INJECTION 🚨
+    // We hack Player 2's browser so every message they send tells Supabase 
+    // it was sent "60 seconds ago". (Simulating a terribly inaccurate phone clock).
+    await p2.addInitScript(() => {
+        const originalDateNow = Date.now;
+        Date.now = () => originalDateNow() - 60000; 
+    });
+
+    const GAME_URL = 'http://127.0.0.1:8080';
+
+    await Promise.all([
+      p1.goto(GAME_URL),
+      p2.goto(GAME_URL),
+      p3.goto(GAME_URL)
+    ]);
+
+    // ---------------------------------------------------------
+    // STEP 1: JOINING & CLOCK DRIFT TEST
+    // ---------------------------------------------------------
+    await p1.click('#start-game-btn');
+    await expect(p1.locator('#game-screen')).toBeVisible();
+
+    await p2.click('#start-game-btn');
+    await expect(p2.locator('#game-screen')).toBeVisible();
+
+    // If your Clock Drift fix failed, Player 1 will see "0 Others Guessing" 
+    // because Player 2's timestamp is 60 seconds old. 
+    // If the fix works, Player 1 correctly trusts their local clock and sees "1".
+    await expect(p1.locator('#presence-count')).toHaveText('1 Other Guessing');
+
+    await p3.click('#start-game-btn');
+    await expect(p3.locator('#game-screen')).toBeVisible();
+
+    await expect(p1.locator('#presence-count')).toHaveText('2 Others Guessing');
+
+    // ---------------------------------------------------------
+    // STEP 2: GRACEFUL EXIT 
+    // ---------------------------------------------------------
+    await p2.click('#board-return-menu-btn');
+    await expect(p2.locator('#home-screen')).toBeVisible();
+
+    await expect(p1.locator('#presence-count')).toHaveText('1 Other Guessing');
+    await expect(p3.locator('#presence-count')).toHaveText('1 Other Guessing');
+
+    // ---------------------------------------------------------
+    // STEP 3: MOBILE LIFECYCLE (Backgrounding App)
+    // ---------------------------------------------------------
+    await p3.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', { value: 'hidden', writable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    await expect(p1.locator('#presence-count')).toHaveText('0 Others Guessing');
+
+    await p3.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', { value: 'visible', writable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    await expect(p1.locator('#presence-count')).toHaveText('1 Other Guessing');
+
+    // ---------------------------------------------------------
+    // STEP 4: NETWORK INSTABILITY (Losing Wi-Fi)
+    // ---------------------------------------------------------
+    await p1.evaluate(() => window.dispatchEvent(new Event('offline')));
+    await expect(p3.locator('#presence-count')).toHaveText('0 Others Guessing');
+
+    await p1.evaluate(() => window.dispatchEvent(new Event('online')));
+    await expect(p3.locator('#presence-count')).toHaveText('1 Other Guessing');
+
+    // ---------------------------------------------------------
+    // STEP 5: THE 25-SECOND HEARTBEAT FAILSAFE
+    // ---------------------------------------------------------
+    await expect(p3.locator('#presence-dot')).toHaveClass(/active/);
     
-    // Type a letter to become an "active" guesser
-    await expect(page.locator('#game-screen')).toBeVisible();
-    await page.click('#key-a');
-  }
+    // Kill Player 1 entirely (Browser crash simulation)
+    await p1.close();
 
-  // Generate unique names to prevent database clashes
-  const runId = Date.now().toString().slice(-4);
-  
-  // --- CASE 1: The Lonely Player (Zero State) ---
-  await loginAndJoin(pageA, `Alpha ${runId}`);
-  await expect(pageA.locator('#presence-count')).toHaveText('0 Others Guessing');
+    // Wait for the 25-second server purge
+    await expect(p3.locator('#presence-dot')).toHaveClass(/inactive/, { timeout: 30000 });
+    await expect(p3.locator('#presence-count')).toHaveText('0 Others Guessing', { timeout: 30000 });
 
-  // --- CASE 2: The Duel (Singular Grammar State) ---
-  await loginAndJoin(pageB, `Bravo ${runId}`);
-  
-  // A should update to 1. B should see 1 right away.
-  await expect(pageA.locator('#presence-count')).toHaveText('1 Other Guessing');
-  await expect(pageB.locator('#presence-count')).toHaveText('1 Other Guessing');
-
-  // --- CASE 3: The Crowd (Plural Grammar State) ---
-  await loginAndJoin(pageC, `Charlie ${runId}`);
-  
-  // Everyone should now see "2 Others Guessing"
-  await expect(pageA.locator('#presence-count')).toHaveText('2 Others Guessing');
-  await expect(pageB.locator('#presence-count')).toHaveText('2 Others Guessing');
-  await expect(pageC.locator('#presence-count')).toHaveText('2 Others Guessing');
-
-  // --- CASE 4: The Rage Quit (Disconnect & Culling State) ---
-  // We simulate Player B abruptly closing their browser window
-  await pageB.close();
-
-  // Because your main.js evaluates the presence array every 3 seconds to cull dead connections,
-  // we need to tell Playwright to wait 3.5 seconds before checking the UI again.
-  await pageA.waitForTimeout(3500);
-
-  // Both remaining players should see the number drop back down to 1
-  await expect(pageA.locator('#presence-count')).toHaveText('1 Other Guessing');
-  await expect(pageC.locator('#presence-count')).toHaveText('1 Other Guessing');
+  });
 });
