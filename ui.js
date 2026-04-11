@@ -3,6 +3,8 @@
 // ==========================================
 
 import { updatePresence } from './api.js';
+import { gameState } from './game.js';
+
 // --- CACHED DOM ELEMENTS ---
 // Caching these prevents the browser from having to search the entire document every time a key is pressed.
 const rows = document.querySelectorAll('.board-row');
@@ -313,14 +315,36 @@ export function renderLeaderboardTable(sortedPlayers) {
         const formattedTime = formatSharkTime(player.displayTimeSeconds);
         const sharkStyle = player.isShark ? 'style="color: var(--color-present);"' : '';
         
-        // Tag the active shark's time cell so main.js can easily find it and tick it up
         const timeCellId = player.isShark ? 'id="active-shark-live-time"' : '';
         const baseTimeAttr = player.isShark ? `data-basetime="${player.baseTime}"` : '';
 
+        // 1. Setup variables for our icons
+        let prefix = "";
+        let suffix = "";
+        let crownHTML = "";
+        let rowClass = "";
+
+        // 2. Determine placements (Crown for 1st, double medals for 2nd and 3rd)
+        if (gameState.lastWeekWinners.length > 0 && player.id === gameState.lastWeekWinners[0]) {
+            crownHTML = `<span class="prev-winner-crown" title="Last Week's Winner!">👑</span>`;
+            rowClass = "has-crown";
+        } else if (gameState.lastWeekWinners.length > 1 && player.id === gameState.lastWeekWinners[1]) {
+            prefix = `<span title="2nd Place Last Week">🥈</span> `;
+            suffix = ` <span title="2nd Place Last Week">🥈</span>`;
+        } else if (gameState.lastWeekWinners.length > 2 && player.id === gameState.lastWeekWinners[2]) {
+            prefix = `<span title="3rd Place Last Week">🥉</span> `;
+            suffix = ` <span title="3rd Place Last Week">🥉</span>`;
+        }
+
+        // 3. Build the final HTML string
+        // The medals go OUTSIDE the div so they don't mess up the crown centering
+        let nameHTML = `${prefix}<div style="position: relative; display: inline-block;">${crownHTML}${player.username}</div>${suffix}`;
+
+        // 4. Build the row
         const rowHTML = `
-        <tr>
+        <tr class="${rowClass}">
             <td class="${rankClass}">${rank}</td>
-            <td ${sharkStyle}>${player.username}</td>
+            <td ${sharkStyle}>${nameHTML}</td>
             <td ${sharkStyle} ${timeCellId} ${baseTimeAttr}>${formattedTime}</td>
             <td>${player.fish_eaten}</td>
             <td>${player.sharks_evaded}</td>

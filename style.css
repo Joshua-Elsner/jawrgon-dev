@@ -737,3 +737,20 @@ button:disabled:hover {
     color: #ff4444;
     font-weight: 900;
 }
+
+.prev-winner-crown {
+    position: absolute;
+    top: -24px; /* Adjust this to move the crown higher/lower */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.3rem; /* Adjust crown size */
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    cursor: default;
+    user-select: none;
+}
+
+/* Gives extra headroom specifically for the row with the crown */
+tr.has-crown td {
+    padding-top: 30px !important; /* Normal is 12px, giving the crown 18px of space */
+}

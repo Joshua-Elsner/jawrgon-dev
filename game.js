@@ -23,7 +23,8 @@ export const gameState = {
     submittedGuesses: [],
     
     // Leaderboard memory
-    cachedPlayers: []
+    cachedPlayers: [],
+    lastWeekWinners: []
 };
 
 // ==========================================

@@ -6,7 +6,8 @@ import {
     claimSharkTitle, recordSharkMeal, fetchWordSuggestions,
     setupRealtimeSubscriptions, createNewPlayer,
     recordYoink, sendYoinkBroadcast,
-    setupPresence, updatePresence, mySessionId
+    setupPresence, updatePresence, mySessionId,
+    fetchLastWeekWinners
 } from './api.js';
 
 import {
@@ -42,6 +43,7 @@ async function init() {
         await loadGameState();
         await loadLeaderboard();
         await loadPlayers();
+        gameState.lastWeekWinners = await fetchLastWeekWinners();
 
         // 1. Core Game State Subscriptions
         setupRealtimeSubscriptions(
