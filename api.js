@@ -5,6 +5,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const supabaseUrl = 'https://okbynkairmznzcriuknd.supabase.co';
 const supabaseKey = 'sb_publishable_ZJGYQbdtUaABBX1lhOw8qw_Ksiw-S54';
 
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 let gameEventsChannel;
@@ -42,7 +43,7 @@ export async function fetchLeaderboard() {
         .from('players')
         .select('*')
         .order('total_time_as_shark', { ascending: false })
-        .limit(30);
+        .limit(100);
 
     if (error) {
         console.error("Error fetching leaderboard:", error);

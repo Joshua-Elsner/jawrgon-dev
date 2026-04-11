@@ -1,9 +1,20 @@
+# Dependencies
 node_modules/
-.env
+.pnp
+.pnp.js
 
-# Playwright
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-/playwright/.auth/
+# Environment / Secrets
+.env
+.env.*
+!.env.example
+
+# Playwright / Testing
+test-results/
+playwright-report/
+blob-report/
+# Targets the playwright hidden folders specifically
+.auth/
+.cache/
+
+# Project Specific
+/supabase/snippets/

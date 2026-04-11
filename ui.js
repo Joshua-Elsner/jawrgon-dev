@@ -325,6 +325,7 @@ export function renderLeaderboardTable(sortedPlayers) {
             <td>${player.fish_eaten}</td>
             <td>${player.sharks_evaded}</td>
             <td>${player.yoinks || 0}</td>
+            <td>${player.shark_of_the_week_wins || 0}</td>
         </tr>
         `;
 
