@@ -2,8 +2,8 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 // Initialize the connection
-const supabaseUrl = 'https://okbynkairmznzcriuknd.supabase.co';
-const supabaseKey = 'sb_publishable_ZJGYQbdtUaABBX1lhOw8qw_Ksiw-S54';
+const supabaseUrl = 'http://127.0.0.1:54321';
+const supabaseKey = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH';
 
 
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -99,23 +99,6 @@ export async function claimSharkTitle(winnerId, guessedWord, newSecretWord) {
         console.error("Error claiming shark title:", error);
         throw error; 
     }
-}
-
-/**
- * Checks if a word exists in the remote dictionary
- */
-export async function checkWordValidity(word) {
-    const { data, error } = await supabase
-        .from('dictionary')
-        .select('word')
-        .eq('word', word.toUpperCase())
-        .single();
-    
-    // If we find a row, it's valid. If not, it's invalid.
-    if (error && error.code === 'PGRST116') return false; // Not found
-    if (error) throw error;
-    
-    return !!data;
 }
 
 /**

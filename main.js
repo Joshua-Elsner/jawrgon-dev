@@ -3,7 +3,7 @@
 // ==========================================
 import {
     fetchGameState, fetchLeaderboard, fetchPlayers,
-    claimSharkTitle, recordSharkMeal, checkWordValidity, fetchWordSuggestions,
+    claimSharkTitle, recordSharkMeal, fetchWordSuggestions,
     setupRealtimeSubscriptions, createNewPlayer,
     recordYoink, sendYoinkBroadcast,
     setupPresence, updatePresence, mySessionId

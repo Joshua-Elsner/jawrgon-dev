@@ -2,7 +2,6 @@
 // CENTRAL STATE
 // ==========================================
 
-import { checkWordValidity } from './api.js';
 import { VALID_WORDS } from './words.js';
 
 export const gameState = {
