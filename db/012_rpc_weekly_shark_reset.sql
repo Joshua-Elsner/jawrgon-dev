@@ -53,6 +53,15 @@ BEGIN
         secret_word = 'SHARK',
         shark_start_time = NOW()
     WHERE id = 1;
+
+    -- ==========================================
+    -- 7. WIPE THE USED WORDS DICTIONARY
+    -- ==========================================
+    DELETE FROM used_words WHERE word IS NOT NULL;
+    
+    -- Re-insert the default game word 'SHARK' so players can't 
+    -- immediately set it to 'SHARK' after the reset happens.
+    INSERT INTO used_words (word) VALUES ('SHARK');
     
 END;
 $$;
