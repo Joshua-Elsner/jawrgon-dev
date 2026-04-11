@@ -229,8 +229,7 @@ function handleKeyInput(letter) {
 async function submitGuess() {
     if (gameState.currentGuess.length !== 5) return;
 
-    // Wait for the database to confirm it's a real word
-    const isValid = await isValidWord(gameState.currentGuess);
+    const isValid = isValidWord(gameState.currentGuess);
     if (!isValid) {
         shakeRow(gameState.currentRow);
         showToast("Not in word list");
@@ -474,10 +473,10 @@ document.getElementById('submit-new-word')?.addEventListener('click', async () =
         return;
     }
 
-    setSubmitButtonLoading(true); // Put this BEFORE the DB check so the UI feels responsive
+    setSubmitButtonLoading(true);
 
-    // Await the async validation
-    const isValid = await isValidWord(newWord);
+    // Await the validation
+    const isValid = isValidWord(newWord);
     if (!isValid) {
         showToast("Not in word list");
         setSubmitButtonLoading(false);
