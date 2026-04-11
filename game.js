@@ -20,9 +20,11 @@ export const gameState = {
     currentTile: 0,
     currentGuess: "",
     isGameOver: false,
+    submittedGuesses: [],
     
     // Leaderboard memory
-    cachedPlayers: []
+    cachedPlayers: [],
+    lastWeekWinners: []
 };
 
 // ==========================================
@@ -48,6 +50,7 @@ export function resetGameState() {
     gameState.currentTile = 0;
     gameState.currentGuess = "";
     gameState.isGameOver = false;
+    gameState.submittedGuesses = [];
 }
 
 /**
@@ -164,4 +167,43 @@ export function processLeaderboardData(players) {
 
     // Sort by the highest score first
     return playersWithLiveTime.sort((a, b) => b.displayTimeSeconds - a.displayTimeSeconds);
+}
+
+/**
+ * Saves the current board state to the browser's local storage
+ */
+export function saveBoardState() {
+    localStorage.setItem('jawrgon_board_state', JSON.stringify({
+        secretWord: gameState.secretWord,
+        guesses: gameState.submittedGuesses,
+        isGameOver: gameState.isGameOver
+    }));
+}
+
+/**
+ * Checks local storage for an active game matching the current secret word
+ * @returns {boolean} True if data was successfully restored
+ */
+export function loadBoardState() {
+    const saved = localStorage.getItem('jawrgon_board_state');
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            // Only restore if the word hasn't been yoinked!
+            if (parsed.secretWord === gameState.secretWord) {
+                gameState.submittedGuesses = parsed.guesses || [];
+                gameState.isGameOver = parsed.isGameOver || false;
+                return true;
+            }
+        } catch(e) {}
+    }
+    return false;
+}
+
+/**
+ * Wipes the saved board state (used when the player officially chooses to try again)
+ */
+export function clearBoardState() {
+    localStorage.removeItem('jawrgon_board_state');
+    gameState.submittedGuesses = [];
 }

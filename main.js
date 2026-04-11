@@ -6,13 +6,15 @@ import {
     claimSharkTitle, recordSharkMeal, fetchWordSuggestions,
     setupRealtimeSubscriptions, createNewPlayer,
     recordYoink, sendYoinkBroadcast,
-    setupPresence, updatePresence, mySessionId
+    setupPresence, updatePresence, mySessionId,
+    fetchLastWeekWinners
 } from './api.js';
 
 import {
     gameState, setPlayer, resetGameState, addLetterToState,
     deleteLetterFromState, advanceRow, isValidWord,
-    evaluateGuess, processLeaderboardData
+    evaluateGuess, processLeaderboardData,
+    saveBoardState, loadBoardState, clearBoardState
 } from './game.js';
 
 import {
@@ -41,6 +43,7 @@ async function init() {
         await loadGameState();
         await loadLeaderboard();
         await loadPlayers();
+        gameState.lastWeekWinners = await fetchLastWeekWinners();
 
         // 1. Core Game State Subscriptions
         setupRealtimeSubscriptions(
@@ -203,6 +206,39 @@ function startSharkTimer() {
 function startNewGame() {
     resetGameState(); // game.js
     resetBoardUI();   // ui.js
+
+    // Check if they have an active game for THIS word
+    if (loadBoardState() && gameState.submittedGuesses.length > 0) {
+        restoreBoardUI();
+    }
+}
+
+function restoreBoardUI() {
+    // Replay every saved guess to instantly reconstruct the board
+    gameState.submittedGuesses.forEach((guess, index) => {
+        for (let i = 0; i < 5; i++) {
+            updateTileText(index, i, guess[i]);
+        }
+        const statuses = evaluateGuess(guess, gameState.secretWord);
+        paintRowStatuses(index, guess, statuses);
+        revealNextRow(index);
+    });
+
+    gameState.currentRow = gameState.submittedGuesses.length;
+
+    // Check if they reloaded after already finishing the game
+    if (gameState.isGameOver) {
+        const lastGuess = gameState.submittedGuesses[gameState.submittedGuesses.length - 1];
+        if (lastGuess === gameState.secretWord) {
+            handleWin(); 
+        } else {
+            handleLoss(true); // Pass true to prevent double-awarding "Fish eaten"
+        }
+    } else if (gameState.currentRow < 6) {
+        // Game is still active, open the next row for them!
+        updateGuessCounter(gameState.currentRow);
+        revealNextRow(gameState.currentRow);
+    }
 }
 
 // ==========================================
@@ -242,14 +278,22 @@ async function submitGuess() {
     // 2. Update UI (View)
     paintRowStatuses(gameState.currentRow, gameState.currentGuess, statuses);
 
-    // 3. Check Win/Loss
+    // 3. Save the Guess (Memory)
+    gameState.submittedGuesses.push(gameState.currentGuess); // <-- ADD THIS
+
+    // 4. Check Win/Loss
     if (gameState.currentGuess === gameState.secretWord) {
+        gameState.isGameOver = true;
+        saveBoardState(); // <-- ADD THIS
         handleWin();
     } else {
         if (gameState.currentRow === 5) { // 6th attempt (0-indexed)
+            gameState.isGameOver = true;
+            saveBoardState(); // <-- ADD THIS
             handleLoss();
         } else {
             advanceRow();
+            saveBoardState(); // <-- ADD THIS
             updateGuessCounter(gameState.currentRow);
             revealNextRow(gameState.currentRow);
         }
@@ -274,11 +318,12 @@ async function handleWin() {
     }
 }
 
-async function handleLoss() {
+async function handleLoss(isRestore = false) {
     gameState.isGameOver = true;
     toggleScreen('lose-modal', true);
 
-    if (gameState.currentSharkId) {
+    // Prevent giving the Shark double points if the player refreshed the page!
+    if (gameState.currentSharkId && !isRestore) {
         try {
             await recordSharkMeal();
         } catch (error) {
@@ -418,6 +463,7 @@ document.getElementById('close-how-to-play-btn')?.addEventListener('click', () =
 document.getElementById('close-how-to-x')?.addEventListener('click', () => toggleScreen('how-to-play-modal', false));
 document.getElementById('try-again-btn')?.addEventListener('click', () => {
     toggleScreen('lose-modal', false);
+    clearBoardState();
     startNewGame();
 });
 
@@ -425,6 +471,7 @@ document.getElementById('lose-menu-btn')?.addEventListener('click', () => {
     toggleScreen('lose-modal', false);
     toggleScreen('game-screen', false);
     toggleScreen('home-screen', true);
+    clearBoardState();
     startNewGame();
     updatePresence(false);
 });
@@ -434,6 +481,7 @@ document.getElementById('lose-leaderboard-btn')?.addEventListener('click', () =>
     toggleScreen('game-screen', false);
     loadLeaderboard();
     toggleScreen('leaderboard-screen', true);
+    clearBoardState();
     startNewGame();
     updatePresence(false);
 });
@@ -460,6 +508,7 @@ document.getElementById('submit-new-word')?.addEventListener('click', async () =
         toggleScreen('win-modal', false);
         toggleScreen('game-screen', false);
         toggleScreen('home-screen', true);
+        clearBoardState();
         startNewGame();
         updatePresence(false);
         return;
@@ -487,6 +536,8 @@ document.getElementById('submit-new-word')?.addEventListener('click', async () =
         await claimSharkTitle(gameState.currentPlayerId, gameState.currentGuess, newWord);
 
         // Success!
+        clearBoardState();
+
         gameState.currentSharkId = gameState.currentPlayerId;
         gameState.secretWord = newWord;
 
@@ -521,3 +572,20 @@ document.getElementById('new-word-input')?.addEventListener('keydown', (e) => {
 // START APP
 // ==========================================
 init();
+
+// ==========================================
+// TEMPORARY ANNOUNCEMENT (DELETE LATER)
+// ==========================================
+
+setTimeout(() => {
+    // Check if they've seen it before
+    if (!localStorage.getItem('saw_reset_announcement')) {
+        toggleScreen('announcement-modal', true);
+    }
+}, 500); // Slight delay so it pops up smoothly after the game loads
+
+document.getElementById('dismiss-announcement-btn')?.addEventListener('click', () => {
+    // Drop the cookie so they never see it again
+    localStorage.setItem('saw_reset_announcement', 'true');
+    toggleScreen('announcement-modal', false);
+});

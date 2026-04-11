@@ -5,7 +5,6 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const supabaseUrl = 'https://okbynkairmznzcriuknd.supabase.co';
 const supabaseKey = 'sb_publishable_ZJGYQbdtUaABBX1lhOw8qw_Ksiw-S54';
 
-
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 let gameEventsChannel;
@@ -304,4 +303,26 @@ export async function updatePresence(isGuessing) {
             updatePresence(nextState);
         }
     }
+}
+
+/**
+ * Fetches the 1st, 2nd, and 3rd place winners from the most recently completed week
+ * @returns {Promise<Array>} Array of player UUIDs
+ */
+export async function fetchLastWeekWinners() {
+    const { data, error } = await supabase
+        .from('weekly_shark_history')
+        .select('player_id, week_ending')
+        .order('week_ending', { ascending: false })
+        .order('time_as_shark', { ascending: false })
+        .limit(3);
+
+    if (error || !data || data.length === 0) return [];
+
+    // Ensure we only grab players from the exact same "most recent" date
+    // (Prevents accidentally giving 3rd place to someone from 2 weeks ago if only 2 people played last week)
+    const latestWeek = data[0].week_ending;
+    return data
+        .filter(row => row.week_ending === latestWeek)
+        .map(row => row.player_id);
 }
