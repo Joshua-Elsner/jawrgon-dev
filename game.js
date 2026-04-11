@@ -3,6 +3,7 @@
 // ==========================================
 
 import { checkWordValidity } from './api.js';
+import { VALID_WORDS } from './words.js';
 
 export const gameState = {
     // Database sync data
@@ -89,12 +90,12 @@ export function advanceRow() {
 // ==========================================
 
 /**
- * Checks if a word exists in the remote dictionary database
+ * Checks if a word exists in the local dictionary instantly
  * @param {string} word - The 5 letter word to check
- * @returns {Promise<boolean>}
+ * @returns {boolean}
  */
-export async function isValidWord(word) {
-    return await checkWordValidity(word);
+export function isValidWord(word) {
+    return VALID_WORDS.has(word.toUpperCase()); 
 }
 
 /**
