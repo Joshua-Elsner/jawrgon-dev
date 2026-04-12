@@ -346,8 +346,36 @@ export function renderLeaderboardTable(sortedPlayers) {
             <td class="${rankClass}">${rank}</td>
             <td ${sharkStyle}>${nameHTML}</td>
             <td ${sharkStyle} ${timeCellId} ${baseTimeAttr}>${formattedTime}</td>
-            <td>${player.fish_eaten}</td>
-            <td>${player.sharks_evaded}</td>
+            <td>${player.weekly_fish_eaten || 0}</td>
+            <td>${player.weekly_sharks_evaded || 0}</td>
+            <td>${player.weekly_yoinks || 0}</td>
+        </tr>
+        `;
+
+        tbody.insertAdjacentHTML('beforeend', rowHTML);
+    });
+}
+
+/**
+ * Generates the HTML table rows for the Player Stats screen.
+ * @param {Array} sortedPlayers - Must be pre-sorted alphabetically by game.js
+ */
+export function renderPlayerStatsTable(sortedPlayers) {
+    const tbody = document.getElementById('player-stats-body');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+
+    sortedPlayers.forEach(player => {
+        const formattedTime = formatSharkTime(player.displayAllTimeSeconds);
+
+        // Build the row (No rank, no green text, all-time stats)
+        const rowHTML = `
+        <tr>
+            <td>${player.username}</td>
+            <td>${formattedTime}</td>
+            <td>${player.fish_eaten || 0}</td>
+            <td>${player.sharks_evaded || 0}</td>
             <td>${player.yoinks || 0}</td>
             <td>${player.shark_of_the_week_wins || 0}</td>
         </tr>
