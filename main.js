@@ -573,8 +573,9 @@ document.getElementById('new-word-input')?.addEventListener('keydown', (e) => {
 // ==========================================
 init();
 
+/*
 // ==========================================
-// TEMPORARY ANNOUNCEMENT (DELETE LATER)
+// ANNOUNCEMENT
 // ==========================================
 
 setTimeout(() => {
@@ -589,3 +590,4 @@ document.getElementById('dismiss-announcement-btn')?.addEventListener('click', (
     localStorage.setItem('saw_reset_announcement', 'true');
     toggleScreen('announcement-modal', false);
 });
+*/
