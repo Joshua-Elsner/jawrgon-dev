@@ -192,7 +192,13 @@ function updateLeaderboardUI() {
 
 function updatePlayerStatsUI() {
     if (gameState.cachedPlayers.length === 0) return;
-    const sortedStats = processPlayerStatsData(gameState.cachedPlayers);
+    
+    // Read whatever the dropdown is currently set to
+    const sortSelect = document.getElementById('stats-sort-select');
+    const currentSort = sortSelect ? sortSelect.value : 'alpha';
+    
+    // Pass the sort setting into the processor
+    const sortedStats = processPlayerStatsData(gameState.cachedPlayers, currentSort);
     renderPlayerStatsTable(sortedStats);
 }
 
@@ -497,6 +503,10 @@ document.getElementById('lose-menu-btn')?.addEventListener('click', () => {
     clearBoardState();
     startNewGame();
     updatePresence(false);
+});
+
+document.getElementById('stats-sort-select')?.addEventListener('change', () => {
+    updatePlayerStatsUI(); // Instantly re-sorts and re-renders when they click an option
 });
 
 document.getElementById('lose-leaderboard-btn')?.addEventListener('click', () => {
