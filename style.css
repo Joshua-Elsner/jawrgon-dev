@@ -824,3 +824,21 @@ tr.has-crown td {
     background-color: var(--color-stats-theme);
     color: var(--color-background);
 }
+
+#stats-sort-select {
+    background-color: var(--color-background);
+    color: var(--color-stats-theme);
+    border: 2px solid var(--color-stats-theme);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    outline: none;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+#stats-sort-select option {
+    background-color: var(--color-background);
+    color: var(--color-stats-theme);
+}
