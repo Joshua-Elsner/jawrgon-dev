@@ -174,7 +174,7 @@ export function processLeaderboardData(players) {
  * @param {Array} players - Array of player objects from the database
  * @returns {Array} Alphabetically sorted and formatted array of players
  */
-export function processPlayerStatsData(players) {
+export function processPlayerStatsData(players, sortBy = 'alpha') { 
     const playersWithLiveTime = players.map(player => {
         let displayAllTimeSeconds = player.all_time_time_as_shark || 0;
         const isShark = player.username === gameState.currentShark;
