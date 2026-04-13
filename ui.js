@@ -321,19 +321,25 @@ export function renderLeaderboardTable(sortedPlayers) {
         if (rank === 2) rankClass = 'rank-2';
         if (rank === 3) rankClass = 'rank-3';
 
+        // 1. Calculate the correct ordinal suffix (st, nd, rd, th)
+        let ordinal = 'th';
+        if (rank % 10 === 1 && rank % 100 !== 11) ordinal = 'st';
+        else if (rank % 10 === 2 && rank % 100 !== 12) ordinal = 'nd';
+        else if (rank % 10 === 3 && rank % 100 !== 13) ordinal = 'rd';
+
+        // 2. Build the styled rank string (using vertical-align: super for the tiny text)
+        const rankString = `<span class="${rankClass}" style="margin-right: 8px;">${rank}<span style="font-size: 0.6em; vertical-align: super;">${ordinal}</span></span>`;
+
         const formattedTime = formatSharkTime(player.displayTimeSeconds, false);
         const sharkStyle = player.isShark ? 'style="color: var(--color-present);"' : '';
-        
         const timeCellId = player.isShark ? 'id="active-shark-live-time"' : '';
         const baseTimeAttr = player.isShark ? `data-basetime="${player.baseTime}"` : '';
 
-        // 1. Setup variables for our icons
         let prefix = "";
         let suffix = "";
         let crownHTML = "";
         let rowClass = "";
 
-        // 2. Determine placements (Crown for 1st, double medals for 2nd and 3rd)
         if (gameState.lastWeekWinners.length > 0 && player.id === gameState.lastWeekWinners[0]) {
             crownHTML = `<span class="prev-winner-crown" title="Last Week's Winner!">👑</span>`;
             rowClass = "has-crown";
@@ -345,15 +351,13 @@ export function renderLeaderboardTable(sortedPlayers) {
             suffix = ` <span title="3rd Place Last Week">🥉</span>`;
         }
 
-        // 3. Build the final HTML string
-        // The medals go OUTSIDE the div so they don't mess up the crown centering
-        let nameHTML = `${prefix}<div style="position: relative; display: inline-block;">${crownHTML}${player.username}</div>${suffix}`;
+        // 3. Prepend the rankString to the name HTML
+        let nameHTML = `${rankString}${prefix}<div style="position: relative; display: inline-block;">${crownHTML}${player.username}</div>${suffix}`;
 
-        // 4. Build the row
+        // 4. Remove the Rank <td> and left-align the Player <td>
         const rowHTML = `
         <tr class="${rowClass}">
-            <td class="${rankClass}">${rank}</td>
-            <td ${sharkStyle}>${nameHTML}</td>
+            <td style="text-align: left; padding-left: 20px;" ${sharkStyle}>${nameHTML}</td>
             <td ${sharkStyle} ${timeCellId} ${baseTimeAttr}>${formattedTime}</td>
             <td>${player.weekly_fish_eaten || 0}</td>
             <td>${player.weekly_sharks_evaded || 0}</td>
