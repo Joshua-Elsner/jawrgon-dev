@@ -274,6 +274,13 @@ function handleKeyInput(letter) {
         if (deleteLetterFromState()) {
             updateTileText(gameState.currentRow, gameState.currentTile, "");
         }
+    } else if (letter === "CLEAR") {
+        // Loop backwards and delete until the row is empty
+        while (gameState.currentTile > 0) {
+            if (deleteLetterFromState()) {
+                updateTileText(gameState.currentRow, gameState.currentTile, "");
+            }
+        }
     } else {
         if (addLetterToState(letter)) {
             // Because addLetterToState increments currentTile, we use currentTile - 1 for the UI index
