@@ -404,6 +404,7 @@ document.getElementById('board-return-menu-btn')?.addEventListener('click', asyn
 });
 
 document.getElementById('leaderboard-btn').addEventListener('click', () => {
+    updateLeaderboardUI();
     loadLeaderboard();
     toggleScreen('home-screen', false);
     toggleScreen('leaderboard-screen', true);
@@ -522,7 +523,10 @@ document.getElementById('stats-sort-select')?.addEventListener('change', () => {
 document.getElementById('lose-leaderboard-btn')?.addEventListener('click', () => {
     toggleScreen('lose-modal', false);
     toggleScreen('game-screen', false);
+
+    updateLeaderboardUI();
     loadLeaderboard();
+
     toggleScreen('leaderboard-screen', true);
     clearBoardState();
     startNewGame();
