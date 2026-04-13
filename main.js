@@ -615,10 +615,22 @@ document.getElementById('submit-new-word')?.addEventListener('click', async () =
         startNewGame();
         updatePresence(false);
 
-    } catch (error) {
+        } catch (error) {
         setSubmitButtonLoading(false);
         if (error.message && error.message.includes('Word already used')) {
             showToast("That word has already been used in a past game!");
+        } else if (error.message && error.message.includes('TOO SLOW!!!')) {
+            // Wipe their board, fetch the new reality, and kick them out of the modal
+            showToast("TOO SLOW! The Shark already changed!");
+            toggleScreen('win-modal', false);
+            toggleScreen('game-screen', false);
+            
+            clearBoardState();
+            await loadGameState(); 
+            startNewGame();
+            
+            toggleScreen('home-screen', true);
+            updatePresence(false);
         } else {
             showToast(error.message || "Failed to update the database.");
         }
