@@ -289,15 +289,18 @@ export function setSubmitButtonLoading(isLoading) {
 // ==========================================
 
 /**
- * Helper: Formats total seconds into a clean ddd:hh:mm:ss string
+ * Helper: Formats total seconds into a clean d:hh:mm:ss or ddd:hh:mm:ss string
  */
-function formatSharkTime(totalSeconds) {
+function formatSharkTime(totalSeconds, isAllTime = false) {
     const days = Math.floor(totalSeconds / 86400);
     const hours = Math.floor((totalSeconds % 86400) / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
 
-    return `${days.toString().padStart(3, '0')}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    // Use 3 zeros for all-time stats, and 1 zero for the weekly leaderboard
+    const daysFormat = isAllTime ? days.toString().padStart(3, '0') : days.toString();
+
+    return `${daysFormat}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
 /**
@@ -318,7 +321,7 @@ export function renderLeaderboardTable(sortedPlayers) {
         if (rank === 2) rankClass = 'rank-2';
         if (rank === 3) rankClass = 'rank-3';
 
-        const formattedTime = formatSharkTime(player.displayTimeSeconds);
+        const formattedTime = formatSharkTime(player.displayTimeSeconds, false);
         const sharkStyle = player.isShark ? 'style="color: var(--color-present);"' : '';
         
         const timeCellId = player.isShark ? 'id="active-shark-live-time"' : '';
@@ -373,7 +376,7 @@ export function renderPlayerStatsTable(sortedPlayers) {
     tbody.innerHTML = '';
 
     sortedPlayers.forEach(player => {
-        const formattedTime = formatSharkTime(player.displayAllTimeSeconds);
+        const formattedTime = formatSharkTime(player.displayAllTimeSeconds, true);
 
         // Build the row (No rank, no green text, all-time stats)
         const rowHTML = `

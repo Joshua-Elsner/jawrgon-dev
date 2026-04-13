@@ -130,11 +130,11 @@ test.describe('Weekly Shark of the Week Reset (E2E Legitimate Play)', () => {
     // Verify winShark got the crown and time reset
     const winnerRow = p2.locator('tr', { hasText: winnerName });
     await expect(winnerRow.locator('td').last()).toHaveText('1');
-    await expect(winnerRow).toContainText('00:00:00:00');
+    await expect(winnerRow).toContainText('0:00:00:00'); // <--- Removed a zero here
 
     // Verify Loser got nothing and time reset
     const loserRow = p2.locator('tr', { hasText: loserName });
     await expect(loserRow.locator('td').last()).toHaveText('0');
-    await expect(loserRow).toContainText('00:00:00:00');
+    await expect(loserRow).toContainText('0:00:00:00'); // <--- Removed a zero here
   });
 });
