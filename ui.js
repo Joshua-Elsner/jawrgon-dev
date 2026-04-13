@@ -335,24 +335,23 @@ export function renderLeaderboardTable(sortedPlayers) {
         const timeCellId = player.isShark ? 'id="active-shark-live-time"' : '';
         const baseTimeAttr = player.isShark ? `data-basetime="${player.baseTime}"` : '';
 
-        let prefix = "";
+        // 1. Setup variables for our icons
         let suffix = "";
         let crownHTML = "";
         let rowClass = "";
 
+        // 2. Determine placements (Crown for 1st, trailing medals for 2nd and 3rd)
         if (gameState.lastWeekWinners.length > 0 && player.id === gameState.lastWeekWinners[0]) {
             crownHTML = `<span class="prev-winner-crown" title="Last Week's Winner!">👑</span>`;
             rowClass = "has-crown";
         } else if (gameState.lastWeekWinners.length > 1 && player.id === gameState.lastWeekWinners[1]) {
-            prefix = `<span title="2nd Place Last Week">🥈</span> `;
             suffix = ` <span title="2nd Place Last Week">🥈</span>`;
         } else if (gameState.lastWeekWinners.length > 2 && player.id === gameState.lastWeekWinners[2]) {
-            prefix = `<span title="3rd Place Last Week">🥉</span> `;
             suffix = ` <span title="3rd Place Last Week">🥉</span>`;
         }
 
         // 3. Prepend the rankString to the name HTML
-        let nameHTML = `${rankString}${prefix}<div style="position: relative; display: inline-block;">${crownHTML}${player.username}</div>${suffix}`;
+        let nameHTML = `${rankString}<div style="position: relative; display: inline-block;">${crownHTML}${player.username}</div>${suffix}`;
 
         // 4. Remove the Rank <td> and left-align the Player <td>
         const rowHTML = `
