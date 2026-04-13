@@ -621,7 +621,8 @@ document.getElementById('submit-new-word')?.addEventListener('click', async () =
             showToast("That word has already been used in a past game!");
         } else if (error.message && error.message.includes('TOO SLOW!!!')) {
             // Wipe their board, fetch the new reality, and kick them out of the modal
-            showToast("TOO SLOW! The Shark already changed!");
+            showToast("Oops! Someone else already guessed it! You may have a bad connection.");
+            
             toggleScreen('win-modal', false);
             toggleScreen('game-screen', false);
             
