@@ -399,6 +399,29 @@ export function updateGuessCounter(currentRow) {
     }
 }
 
+/**
+ * Calculates the date of the upcoming Sunday and updates the Leaderboard header
+ */
+export function setWeekEndingDate() {
+    const display = document.getElementById('week-ending-display');
+    if (!display) return;
+
+    const now = new Date();
+    // getDay() returns 0 for Sunday, 1 for Monday, etc.
+    let daysUntilSunday = 7 - now.getDay();
+    
+    // If today is Sunday, show today's date instead of jumping to next week
+    if (daysUntilSunday === 7) daysUntilSunday = 0; 
+
+    const nextSunday = new Date(now);
+    nextSunday.setDate(now.getDate() + daysUntilSunday);
+
+    const month = nextSunday.getMonth() + 1; // Months are 0-indexed
+    const day = nextSunday.getDate();
+
+    display.textContent = `Week ending ${month}/${day}`;
+}
+
 // ==========================================
 // PRESENCE UI
 // ==========================================

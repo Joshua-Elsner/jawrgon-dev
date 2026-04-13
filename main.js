@@ -22,7 +22,8 @@ import {
     shakeRow, revealNextRow, updateSharkDisplay, updateStartButton,
     renderPlayerList, toggleScreen, setupWinModal,
     renderWordSuggestions, setSubmitButtonLoading, renderLeaderboardTable,
-    renderPlayerStatsTable, updateGuessCounter, updatePresenceUI
+    renderPlayerStatsTable, updateGuessCounter, updatePresenceUI,
+    setWeekEndingDate
 } from './ui.js';
 
 // ==========================================
@@ -39,6 +40,8 @@ async function init() {
             // Clean up the URL so the parameter disappears
             window.history.replaceState({}, document.title, window.location.pathname);
         }
+
+         setWeekEndingDate();
 
         await loadGameState();
         await loadLeaderboard();
