@@ -1,1 +1,1 @@
-https://joshua-elsner.github.io/Multiplayer-Word-Game/
+https://joshua-elsner.github.io/jawrgon-dev/

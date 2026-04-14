@@ -3,8 +3,6 @@
 // ==========================================
 
 import { updatePresence } from './api.js';
-import { gameState } from './game.js';
-
 // --- CACHED DOM ELEMENTS ---
 // Caching these prevents the browser from having to search the entire document every time a key is pressed.
 const rows = document.querySelectorAll('.board-row');
@@ -217,6 +215,12 @@ export function toggleScreen(screenId, show) {
     const screen = document.getElementById(screenId);
     if (screen) {
         show ? screen.classList.remove('hidden') : screen.classList.add('hidden');
+        
+        // AUTOMATIC PRESENCE TRACKING
+        // If the screen being toggled is the game board, update their presence immediately!
+        if (screenId === 'game-screen') {
+            updatePresence(show);
+        }
     }
 }
 
@@ -403,28 +407,6 @@ export function updateGuessCounter(currentRow) {
         // We add 1 because rows are 0-indexed in the code!
         counter.textContent = `Guess ${currentRow + 1}/6`;
     }
-}
-
-/**
- * Calculates the date of the upcoming Sunday and updates the Leaderboard header
- */
-export function setWeekEndingDate() {
-    const display = document.getElementById('week-ending-display');
-    if (!display) return;
-
-    const now = new Date();
-    
-    // getDay() returns 0 for Sunday, 1 for Monday, etc.
-    // If today is Sunday (0), 7 - 0 = 7. It will correctly target NEXT Sunday!
-    let daysUntilSunday = 7 - now.getDay();
-    
-    const nextSunday = new Date(now);
-    nextSunday.setDate(now.getDate() + daysUntilSunday);
-
-    const month = nextSunday.getMonth() + 1;
-    const day = nextSunday.getDate();
-
-    display.textContent = `Week ending ${month}/${day}`;
 }
 
 // ==========================================

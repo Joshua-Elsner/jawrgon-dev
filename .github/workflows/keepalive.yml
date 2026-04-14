@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Ping Supabase API
         run: |
-          curl --request GET 'https://okbynkairmznzcriuknd.supabase.co/rest/v1/game_state?select=id&limit=1' \
+          curl --request GET 'https://fwizxuvhitnnnxoyulun.supabase.co/rest/v1/game_state?select=id&limit=1' \
           --header 'apikey: ${{ secrets.SUPABASE_ANON_KEY }}' \
           --header 'Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}' \
           --silent --show-error --fail

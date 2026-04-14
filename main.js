@@ -6,8 +6,7 @@ import {
     claimSharkTitle, recordSharkMeal, fetchWordSuggestions,
     setupRealtimeSubscriptions, createNewPlayer,
     recordYoink, sendYoinkBroadcast,
-    setupPresence, updatePresence, mySessionId,
-    fetchLastWeekWinners
+    setupPresence, updatePresence, mySessionId
 } from './api.js';
 
 import {
@@ -22,8 +21,7 @@ import {
     shakeRow, revealNextRow, updateSharkDisplay, updateStartButton,
     renderPlayerList, toggleScreen, setupWinModal,
     renderWordSuggestions, setSubmitButtonLoading, renderLeaderboardTable,
-    renderPlayerStatsTable, updateGuessCounter, updatePresenceUI,
-    setWeekEndingDate
+    updateGuessCounter, updatePresenceUI
 } from './ui.js';
 
 // ==========================================
@@ -71,12 +69,12 @@ async function init() {
                         // Trust the client to report that it got yoinked
                         recordYoink(gameState.currentSharkId);
                         sendYoinkBroadcast(gameState.currentSharkId, gameState.currentPlayer);
-
-                        startNewGame();
+                        
+                        startNewGame(); 
                     }
                 }
             },
-
+            
             // Callback for Yoink Broadcasts
             (payload) => {
                 if (gameState.currentPlayerId === payload.sharkId) {
@@ -87,39 +85,22 @@ async function init() {
 
         // 2. Setup the live Presence tracker with Auto-Culling
         let latestPresenceState = {};
-        
-        // NEW: Store the local time we received their last message to defeat Clock Drift
-        let localPresenceData = {}; 
 
+        // This function calculates the number based on fresh timestamps
         function evaluatePresence() {
             let othersGuessingCount = 0;
             const now = Date.now();
 
             for (const key in latestPresenceState) {
-                if (key === mySessionId) continue; 
+                if (key === mySessionId) continue; // Ignore myself
                 
                 // Get this user's most recent sync data
                 const latestObj = latestPresenceState[key].reduce((newest, current) => {
                     return (current.updatedAt || 0) > (newest.updatedAt || 0) ? current : newest;
                 }, { isGuessing: false, updatedAt: 0 });
                 
-                let localData = localPresenceData[key];
-
-                // NEW FIX: Accept the update if the timestamp is newer OR if their true/false state flipped!
-                if (!localData || 
-                    localData.foreignUpdatedAt !== latestObj.updatedAt || 
-                    localData.isGuessing !== latestObj.isGuessing) {
-                    
-                    localData = {
-                        isGuessing: latestObj.isGuessing,
-                        foreignUpdatedAt: latestObj.updatedAt,
-                        localReceivedAt: now 
-                    };
-                    localPresenceData[key] = localData;
-                }
-
-                // Evaluate using ONLY our local clock to prevent "Ghost Yoink" time drift
-                if (localData.isGuessing && (now - localData.localReceivedAt < 25000)) {
+                // CRITICAL CHECK: Are they guessing AND did they heartbeat in the last 25 seconds?
+                if (latestObj.isGuessing && (now - latestObj.updatedAt < 25000)) {
                     othersGuessingCount++;
                 }
             }
@@ -136,7 +117,7 @@ async function init() {
         // Even if the server is quiet, check the data locally every 3 seconds.
         // This instantly drops people who close tabs or lose internet!
         setInterval(evaluatePresence, 3000);
-       
+
     } catch (error) {
         showToast("Error connecting to server.");
         console.error(error);
@@ -393,8 +374,10 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
 
 document.getElementById('board-return-menu-btn')?.addEventListener('click', async () => {
     console.log("1. Back button clicked. Telling Supabase I am no longer guessing...");
-
-    // 1. Instantly update the UI so there is zero lag
+    
+    // Await this to guarantee Supabase sends the message before the screen changes
+    await updatePresence(false); 
+    
     toggleScreen('game-screen', false);
     toggleScreen('home-screen', true);
     startNewGame();
@@ -514,10 +497,6 @@ document.getElementById('lose-menu-btn')?.addEventListener('click', () => {
     clearBoardState();
     startNewGame();
     updatePresence(false);
-});
-
-document.getElementById('stats-sort-select')?.addEventListener('change', () => {
-    updatePlayerStatsUI(); // Instantly re-sorts and re-renders when they click an option
 });
 
 document.getElementById('lose-leaderboard-btn')?.addEventListener('click', () => {
