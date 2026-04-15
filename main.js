@@ -195,14 +195,14 @@ function updateLeaderboardUI() {
 
 function updatePlayerStatsUI() {
     if (gameState.cachedPlayers.length === 0) return;
-    
-    // Read whatever the dropdown is currently set to
+
     const sortSelect = document.getElementById('stats-sort-select');
     const currentSort = sortSelect ? sortSelect.value : 'alpha';
     
-    // Pass the sort setting into the processor
     const sortedStats = processPlayerStatsData(gameState.cachedPlayers, currentSort);
-    renderPlayerStatsTable(sortedStats);
+    
+    // Pass currentSort into the render function
+    renderPlayerStatsTable(sortedStats, currentSort); 
 }
 
 function startSharkTimer() {
