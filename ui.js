@@ -376,29 +376,54 @@ export function renderLeaderboardTable(sortedPlayers) {
  * Generates the HTML table rows for the Player Stats screen.
  * @param {Array} sortedPlayers - Must be pre-sorted alphabetically by game.js
  */
-export function renderPlayerStatsTable(sortedPlayers) {
-    const tbody = document.getElementById('player-stats-body');
-    if (!tbody) return;
-    
-    tbody.innerHTML = '';
+// ui.js
+export function renderPlayerStatsTable(sortedPlayers, sortBy = 'alpha') {
+    const table = document.getElementById('player-stats-table');
+    if (!table) return;
 
-    sortedPlayers.forEach(player => {
-        const formattedTime = formatSharkTime(player.displayAllTimeSeconds, true);
+    // 1. Define the blueprint for every column
+    const cols = [
+        { id: 'time', head: '<th>Time as<br>Shark</th>', getVal: p => formatSharkTime(p.displayAllTimeSeconds, true) },
+        { id: 'words', head: '<th>Words<br>Solved</th>', getVal: p => p.sharks_evaded || 0 },
+        { id: 'yoinks', head: '<th>Yoinks</th>', getVal: p => p.yoinks || 0 },
+        { id: 'fish', head: '<th>Fish<br>Eaten</th>', getVal: p => p.fish_eaten || 0 },
+        { id: 'sotw', head: '<th>Shark of<br>the Week<br>Awards</th>', getVal: p => p.shark_of_the_week_wins || 0 }
+    ];
 
-        // Build the row (No rank, no green text, all-time stats)
-        const rowHTML = `
-        <tr>
-            <td>${player.username}</td>
-            <td>${formattedTime}</td>
-            <td>${player.sharks_evaded || 0}</td>
-            <td>${player.yoinks || 0}</td>
-            <td>${player.fish_eaten || 0}</td>
-            <td>${player.shark_of_the_week_wins || 0}</td>
-        </tr>
-        `;
+    // 2. Rearrange the columns based on the current sort
+    let orderedCols = [...cols];
+    if (sortBy !== 'alpha') {
+        const activeIndex = orderedCols.findIndex(c => c.id === sortBy);
+        if (activeIndex > -1) {
+            // Cut the active column out and paste it at the front of the line
+            orderedCols.unshift(orderedCols.splice(activeIndex, 1)[0]);
+        }
+    }
 
-        tbody.insertAdjacentHTML('beforeend', rowHTML);
-    });
+    // 3. Generate the dynamic Header HTML
+    const headHTML = `
+        <thead>
+            <tr>
+                <th>Player</th>
+                ${orderedCols.map(c => c.head).join('')}
+            </tr>
+        </thead>
+    `;
+
+    // 4. Generate the dynamic Body HTML
+    const bodyHTML = `
+        <tbody id="player-stats-body">
+            ${sortedPlayers.map(p => `
+                <tr>
+                    <td>${p.username}</td>
+                    ${orderedCols.map(c => `<td>${c.getVal(p)}</td>`).join('')}
+                </tr>
+            `).join('')}
+        </tbody>
+    `;
+
+    // 5. Inject it all into the empty table
+    table.innerHTML = headHTML + bodyHTML;
 }
 
 export function updateGuessCounter(currentRow) {
