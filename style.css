@@ -470,6 +470,14 @@ background-color: var(--color-absent) !important;
 
 /* Mobile table adjustments */
 @media (max-width: 500px) {
+    h1 {
+        font-size: 1.8rem;
+    }
+
+    .stats-controls label, #stats-sort-select {
+        font-size: 0.85rem;
+    }
+
     .leaderboard-container, .stats-container {
         padding: 10px 2px; /* Pull it closer to the edges of the screen */
         width: 98%; /* Maximize available screen width */
