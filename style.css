@@ -468,36 +468,7 @@ background-color: var(--color-absent) !important;
     font-weight: bold;
 }
 
-/* Mobile table adjustments */
-@media (max-width: 500px) {
-    h1 {
-        font-size: 1.8rem;
-    }
 
-    .stats-controls label, #stats-sort-select {
-        font-size: 0.85rem;
-    }
-
-    .leaderboard-container, .stats-container {
-        padding: 10px 2px; /* Pull it closer to the edges of the screen */
-        width: 98%; /* Maximize available screen width */
-    }
-
-     #leaderboard-table th, 
-    #leaderboard-table td,
-    #player-stats-table th,
-    #player-stats-table td {
-        padding: 6px 15px; /* Enforced column gap */
-        font-size: 0.85rem; /* Slightly smaller data text */
-        white-space: nowrap; /* Forces horizontal scrolling */
-    }
-
-    #leaderboard-table th,
-    #player-stats-table th {
-        font-size: 0.7rem; /* Shrink headers just a bit more */
-        line-height: 1.1; /* Keeps the stacked header text (Fish/Eaten) close together */
-    }
-}
 
 .shake {
     animation: shake 0.4s;
@@ -855,4 +826,35 @@ tr.has-crown td {
 #stats-sort-select option {
     background-color: var(--color-background);
     color: var(--color-stats-theme);
+}
+
+/* Mobile table adjustments */
+@media (max-width: 500px) {
+    h1 {
+        font-size: 1.8rem;
+    }
+
+    .stats-controls label, #stats-sort-select {
+        font-size: 0.85rem;
+    }
+
+    .leaderboard-container, .stats-container {
+        padding: 10px 2px; /* Pull it closer to the edges of the screen */
+        width: 98%; /* Maximize available screen width */
+    }
+
+     #leaderboard-table th, 
+    #leaderboard-table td,
+    #player-stats-table th,
+    #player-stats-table td {
+        padding: 6px 15px; /* Enforced column gap */
+        font-size: 0.85rem; /* Slightly smaller data text */
+        white-space: nowrap; /* Forces horizontal scrolling */
+    }
+
+    #leaderboard-table th,
+    #player-stats-table th {
+        font-size: 0.7rem; /* Shrink headers just a bit more */
+        line-height: 1.1; /* Keeps the stacked header text (Fish/Eaten) close together */
+    }
 }
