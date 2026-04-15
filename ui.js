@@ -351,7 +351,7 @@ export function renderLeaderboardTable(sortedPlayers) {
         }
 
         // 3. Prepend the rankString to the name HTML
-        let nameHTML = `${rankString}<div style="position: relative; display: inline-block;">${crownHTML}${player.username}</div>${suffix}`;
+        let nameHTML = `${rankString}<div style="position: relative; display: inline-block;" ${sharkStyle}>${crownHTML}${player.username}</div>${suffix}`;
 
         // 4. Remove the Rank <td> and left-align the Player <td>
         const rowHTML = `
