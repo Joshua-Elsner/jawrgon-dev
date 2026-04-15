@@ -314,6 +314,8 @@ export function renderLeaderboardTable(sortedPlayers) {
     tbody.innerHTML = '';
 
     sortedPlayers.forEach((player, index) => {
+        const avgGuesses = formatAverageGuesses(player.weekly_total_guesses, player.weekly_games_played);
+
         const rank = index + 1;
         let rankClass = '';
         
@@ -365,6 +367,7 @@ export function renderLeaderboardTable(sortedPlayers) {
             <td>${player.weekly_sharks_evaded || 0}</td>
             <td>${player.weekly_yoinks || 0}</td>
             <td>${player.weekly_fish_eaten || 0}</td>
+            <td>${avgGuesses}</td> 
         </tr>
         `;
 
@@ -387,7 +390,8 @@ export function renderPlayerStatsTable(sortedPlayers, sortBy = 'alpha') {
         { id: 'words', head: '<th>Words<br>Solved</th>', getVal: p => p.sharks_evaded || 0 },
         { id: 'yoinks', head: '<th>Yoinks</th>', getVal: p => p.yoinks || 0 },
         { id: 'fish', head: '<th>Fish<br>Eaten</th>', getVal: p => p.fish_eaten || 0 },
-        { id: 'sotw', head: '<th>Shark of<br>the Week<br>Awards</th>', getVal: p => p.shark_of_the_week_wins || 0 }
+        { id: 'sotw', head: '<th>Shark of<br>the Week<br>Awards</th>', getVal: p => p.shark_of_the_week_wins || 0 },
+        { id: 'avg', head: '<th>Average<br>Guesses</th>', getVal: p => formatAverageGuesses(p.all_time_total_guesses, p.all_time_games_played) }
     ];
 
     // 2. Rearrange the columns based on the current sort
@@ -480,4 +484,20 @@ export function updatePresenceUI(count) {
         dot.classList.add('inactive');
         text.textContent = `0 Others Guessing`;
     }
+}
+
+/**
+ * Helper to format the Average Guesses metric
+ */
+function formatAverageGuesses(totalGuesses, gamesPlayed) {
+    const games = gamesPlayed || 0;
+    const guesses = totalGuesses || 0;
+    
+    // Only wrap the fraction in the styling span. 
+    // The dashes remain outside so they match normal table text!
+    if (games < 10) {
+        return `-- <span style="font-size: 0.75rem; color: #888;">(${games}/10)</span>`;
+    }
+    
+    return (guesses / games).toFixed(1);
 }
