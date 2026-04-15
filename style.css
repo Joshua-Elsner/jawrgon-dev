@@ -858,3 +858,9 @@ tr.has-crown td {
         line-height: 1.1; /* Keeps the stacked header text (Fish/Eaten) close together */
     }
 }
+
+/* Adds extra space between the Player and Time columns in the Leaderboard */
+#leaderboard-table th:first-child,
+#leaderboard-table td:first-child {
+    padding-right: 50px; /* Adjust this value up or down to dial in the exact spacing you want */
+}
