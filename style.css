@@ -475,14 +475,13 @@ background-color: var(--color-absent) !important;
         width: 98%; /* Maximize available screen width */
     }
 
-    #leaderboard-table th, 
+     #leaderboard-table th, 
     #leaderboard-table td,
     #player-stats-table th,
     #player-stats-table td {
-        padding: 6px 3px; /* Tighter padding between columns */
+        padding: 6px 15px; /* Enforced column gap */
         font-size: 0.85rem; /* Slightly smaller data text */
-        /* REMOVED: white-space: nowrap; so your HTML <br> tags actually work! */
-        word-wrap: break-word; /* Allows long player names to wrap instead of pushing columns off-screen */
+        white-space: nowrap; /* Forces horizontal scrolling */
     }
 
     #leaderboard-table th,
@@ -799,18 +798,20 @@ tr.has-crown td {
 }
 
 #player-stats-table th {
-    padding-bottom: 10px;
+    padding: 10px 15px;
     border-bottom: 2px solid var(--color-stats-theme);
     text-transform: uppercase;
     letter-spacing: 1px;
     color: var(--color-stats-theme);
+    white-space: nowrap;
 }
 
 #player-stats-table td {
-    padding: 12px 0;
+    padding: 12px 15px;
     font-size: 1.2rem;
     font-weight: bold;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
 }
 
 .stats-return-btn {
