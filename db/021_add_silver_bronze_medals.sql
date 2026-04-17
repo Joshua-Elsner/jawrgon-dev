@@ -1,0 +1,2 @@
+ALTER TABLE players ADD COLUMN silver_medals INTEGER DEFAULT 0;
+ALTER TABLE players ADD COLUMN bronze_medals INTEGER DEFAULT 0;

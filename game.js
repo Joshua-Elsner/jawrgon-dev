@@ -200,6 +200,8 @@ export function processPlayerStatsData(players, sortBy = 'alpha') {
         if (sortBy === 'words') return (b.sharks_evaded || 0) - (a.sharks_evaded || 0);
         if (sortBy === 'yoinks') return (b.yoinks || 0) - (a.yoinks || 0);
         if (sortBy === 'sotw') return (b.shark_of_the_week_wins || 0) - (a.shark_of_the_week_wins || 0);
+        if (sortBy === 'silver') return (b.silver_medals || 0) - (a.silver_medals || 0);
+        if (sortBy === 'bronze') return (b.bronze_medals || 0) - (a.bronze_medals || 0);
         
         if (sortBy === 'avg') {
             const playedA = a.all_time_puzzles_played || 0;

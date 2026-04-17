@@ -7,7 +7,7 @@ import {
     setupRealtimeSubscriptions, createNewPlayer,
     recordYoink, sendYoinkBroadcast,
     setupPresence, updatePresence, mySessionId,
-    fetchLastWeekWinners
+    fetchLastWeekWinners, fetchWeeklyRecap
 } from './api.js';
 
 import {
@@ -23,7 +23,9 @@ import {
     renderPlayerList, toggleScreen, setupWinModal,
     renderWordSuggestions, setSubmitButtonLoading, renderLeaderboardTable,
     renderPlayerStatsTable, updateGuessCounter, updatePresenceUI,
-    setWeekEndingDate
+    setWeekEndingDate, setStartButtonLoading, setPlayerGridLoading,
+    setLeaderboardLoading, setStatsLoading, setSuggestionsLoading,
+    showWeeklyRecap 
 } from './ui.js';
 
 // ==========================================
@@ -34,6 +36,10 @@ let timerInterval = null;
 
 async function init() {
     try {
+
+        setStartButtonLoading();
+        setPlayerGridLoading();
+
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('discord_linked') === 'success') {
             showToast("Discord successfully linked!");
@@ -137,6 +143,30 @@ async function init() {
         // This instantly drops people who close tabs or lose internet!
         setInterval(evaluatePresence, 3000);
        
+        // --- WEEKLY RECAP CHECK ---
+        const recap = await fetchWeeklyRecap();
+        
+        if (recap) {
+            const lastSeenWeek = localStorage.getItem('jawrgon_last_seen_week');
+            
+            if (!lastSeenWeek) {
+                // Scenario 1: First time loading the update OR a brand new player.
+                // Silently stamp their browser with the current week so they are synced, 
+                // but do NOT show them the modal for a week they didn't see.
+                localStorage.setItem('jawrgon_last_seen_week', recap.weekEnding);
+            } 
+            else if (lastSeenWeek !== recap.weekEnding) {
+                // Scenario 2: They have a stamp, but a new Sunday reset has happened!
+                showWeeklyRecap(recap);
+                
+                // Set up the one-time event listener to close and save
+                document.getElementById('close-recap-btn').onclick = () => {
+                    localStorage.setItem('jawrgon_last_seen_week', recap.weekEnding);
+                    toggleScreen('weekly-recap-modal', false);
+                };
+            }
+        }
+
     } catch (error) {
         showToast("Error connecting to server.");
         console.error(error);
@@ -334,7 +364,8 @@ async function handleWin() {
 
     if (gameState.currentPlayer !== "Guest") {
         try {
-            // Simply ask the database for 2 words! No client filtering needed.
+            setSuggestionsLoading();
+            // Ask the database for 2 words
             const suggestions = await fetchWordSuggestions();
             if (suggestions && suggestions.length === 2) {
                 renderWordSuggestions(suggestions[0], suggestions[1]);
@@ -410,6 +441,7 @@ document.getElementById('board-return-menu-btn')?.addEventListener('click', asyn
 });
 
 document.getElementById('leaderboard-btn').addEventListener('click', () => {
+    if (gameState.cachedPlayers.length === 0) setLeaderboardLoading();
     updateLeaderboardUI();
     loadLeaderboard();
     toggleScreen('home-screen', false);
@@ -417,6 +449,7 @@ document.getElementById('leaderboard-btn').addEventListener('click', () => {
 });
 
 document.getElementById('player-stats-btn')?.addEventListener('click', () => {
+    if (gameState.cachedPlayers.length === 0) setStatsLoading();
     loadLeaderboard(); // Refreshes the cachedPlayers array from the DB
     updatePlayerStatsUI();
     toggleScreen('home-screen', false);
@@ -436,6 +469,13 @@ document.getElementById('how-to-play-btn').addEventListener('click', () => {
 
 // --- Player Modal Controls ---
 document.getElementById('open-player-modal-btn')?.addEventListener('click', () => {
+    // Wipe the search bar clean every time the modal opens
+    const searchInput = document.getElementById('player-search-input');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input')); // Forces the grid to un-hide everyone
+    }
+    
     toggleScreen('player-modal', true);
 });
 document.getElementById('close-player-x')?.addEventListener('click', () => {
@@ -524,6 +564,29 @@ document.getElementById('lose-menu-btn')?.addEventListener('click', () => {
 
 document.getElementById('stats-sort-select')?.addEventListener('change', () => {
     updatePlayerStatsUI(); // Instantly re-sorts and re-renders when they click an option
+    
+    // Snap the table back to the left side
+    const statsContainer = document.querySelector('.stats-container');
+    if (statsContainer) {
+        statsContainer.scrollLeft = 0;
+    }
+});
+
+// --- Player Search Filter ---
+document.getElementById('player-search-input')?.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    const buttons = document.querySelectorAll('#player-list-grid button');
+
+    buttons.forEach(btn => {
+        // textContent cleanly grabs the username and ignores the HTML tags for the Shark icon
+        const username = btn.textContent.toLowerCase();
+        
+        if (username.includes(searchTerm)) {
+            btn.classList.remove('hidden');
+        } else {
+            btn.classList.add('hidden');
+        }
+    });
 });
 
 document.getElementById('lose-leaderboard-btn')?.addEventListener('click', () => {
@@ -549,8 +612,8 @@ document.getElementById('back-to-menu-btn')?.addEventListener('click', () => {
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
         console.log("Tab woke up! Fetching true state...");
-        loadGameState(); 
-        loadLeaderboard(); 
+        loadGameState();
+        loadLeaderboard();
     }
 });
 
@@ -626,21 +689,21 @@ document.getElementById('submit-new-word')?.addEventListener('click', async () =
         startNewGame();
         updatePresence(false);
 
-        } catch (error) {
+    } catch (error) {
         setSubmitButtonLoading(false);
         if (error.message && error.message.includes('Word already used')) {
             showToast("That word has already been used in a past game!");
         } else if (error.message && error.message.includes('TOO SLOW!!!')) {
             // Wipe their board, fetch the new reality, and kick them out of the modal
             showToast("Oops! Someone else already guessed it! You may have a bad connection.");
-            
+
             toggleScreen('win-modal', false);
             toggleScreen('game-screen', false);
-            
+
             clearBoardState();
-            await loadGameState(); 
+            await loadGameState();
             startNewGame();
-            
+
             toggleScreen('home-screen', true);
             updatePresence(false);
         } else {

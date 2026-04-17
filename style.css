@@ -174,6 +174,7 @@ color: black !important;
 background-color: var(--color-absent) !important;
 }
 
+#weekly-recap-modal,
 #announcement-modal,
 #win-modal, 
 #lose-modal, 
@@ -461,7 +462,7 @@ background-color: var(--color-absent) !important;
     width: 100%;
     padding: 12px;
     font-size: 1.1rem;
-    background-color: var(--color-correct);
+    background-color: var(--color-accent);
     color: var(--color-background);
     border: none;
     border-radius: 6px;
@@ -493,11 +494,6 @@ background-color: var(--color-absent) !important;
 
 .lose-content h2 {
     color: #ff4d4d; 
-}
-
-/*Default UI blue*/
-#how-to-play-modal h2 {
-    color: var(--color-text);
 }
 
 .secondary-modal-btn {
@@ -832,10 +828,6 @@ tr.has-crown td {
 
 /* Mobile table adjustments */
 @media (max-width: 500px) {
-    h1 {
-        font-size: 1.8rem;
-    }
-
     .stats-controls label, #stats-sort-select {
         font-size: 0.85rem;
     }
@@ -907,4 +899,14 @@ tr.has-crown td {
 #player-stats-table th:first-child,
 #player-stats-table td:first-child {
     padding-left: 17px !important;
+    /* Adds a 2px vertical border ONLY to the data rows */
+}
+
+/* Adds a permanent, colorful vertical line ONLY to the data rows */
+#leaderboard-table td:first-child {
+    box-shadow: inset -2px 0 0 var(--color-accent);
+}
+
+#player-stats-table td:first-child {
+    box-shadow: inset -2px 0 0 var(--color-stats-theme);
 }

@@ -209,6 +209,21 @@ export function renderPlayerList(players, onSelectCallback, currentSharkId) {
     });
 }
 
+export function setPlayerGridLoading() {
+    const grid = document.getElementById('player-list-grid');
+    if (grid) {
+        grid.innerHTML = '<span style="font-size: 0.9rem; color: #888;">Loading players...</span>';
+    }
+}
+
+export function setStartButtonLoading() {
+    const startGameBtn = document.getElementById('start-game-btn');
+    if (startGameBtn) {
+        startGameBtn.innerHTML = `Connecting to server...`;
+        startGameBtn.disabled = true;
+    }
+}
+
 // ==========================================
 // MODALS & SCREENS
 // ==========================================
@@ -244,6 +259,18 @@ export function setupWinModal(currentPlayerName) {
             newWordInput.value = ""; // Clear old inputs
         }
         submitBtn.textContent = "Confirm";
+    }
+}
+
+export function setSuggestionsLoading() {
+    const suggestionsContainer = document.getElementById('word-suggestions');
+    const sug1Btn = document.getElementById('suggestion-1');
+    const sug2Btn = document.getElementById('suggestion-2');
+
+    if (suggestionsContainer && sug1Btn && sug2Btn) {
+        sug1Btn.textContent = "Loading...";
+        sug2Btn.textContent = "Loading...";
+        suggestionsContainer.classList.remove('hidden');
     }
 }
 
@@ -288,10 +315,58 @@ export function setSubmitButtonLoading(isLoading) {
 // LEADERBOARD UI
 // ==========================================
 
+export function setLeaderboardLoading() {
+    const tbody = document.getElementById('leaderboard-body');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #888;">Loading leaderboard...</td></tr>';
+}
+
+export function setStatsLoading() {
+    const table = document.getElementById('player-stats-table');
+    if (table) table.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #888;">Loading stats...</td></tr>';
+}
+
+export function showWeeklyRecap(recapData) {
+    const modal = document.getElementById('weekly-recap-modal');
+    const weekText = document.getElementById('recap-week-text');
+    const podium = document.getElementById('podium-container');
+
+    if (!modal || !podium) return;
+
+    // Format the date nicely (e.g., "2024-05-12" -> "5/12")
+    const dateObj = new Date(recapData.weekEnding);
+    // Add timezone offset fix so midnight UTC doesn't roll backwards a day
+    dateObj.setMinutes(dateObj.getMinutes() + dateObj.getTimezoneOffset()); 
+    weekText.textContent = `Week ending ${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
+    
+    podium.innerHTML = '';
+
+    const medals = ['👑 Shark of the Week', '🥈 Silver Medal', '🥉 Bronze Medal'];
+    const colors = ['#ffd700', '#c0c0c0', '#cd7f32'];
+
+    recapData.winners.forEach((winner, index) => {
+        const name = winner.players ? winner.players.username : 'Unknown Fish';
+        const time = formatSharkTime(winner.time_as_shark, false); // Reusing your existing time formatter
+        
+        podium.innerHTML += `
+            <div style="background-color: var(--color-background); padding: 15px; border-radius: 8px; border-left: 5px solid ${colors[index]}; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="color: ${colors[index]}; font-weight: bold; font-size: 0.85rem; text-transform: uppercase;">${medals[index]}</div>
+                    <div style="font-size: 1.3rem; margin-top: 4px;">${name}</div>
+                </div>
+                <div style="color: var(--color-text); font-family: monospace; font-size: 1.1rem;">
+                    ${time}
+                </div>
+            </div>
+        `;
+    });
+
+    modal.classList.remove('hidden');
+}
+
 /**
  * Helper: Formats total seconds into a clean d:hh:mm:ss or ddd:hh:mm:ss string
  */
-function formatSharkTime(totalSeconds, isAllTime = false) {
+export function formatSharkTime(totalSeconds, isAllTime = false) {
     const days = Math.floor(totalSeconds / 86400);
     const hours = Math.floor((totalSeconds % 86400) / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -390,8 +465,10 @@ export function renderPlayerStatsTable(sortedPlayers, sortBy = 'alpha') {
         { id: 'words', head: '<th>Words<br>Solved</th>', getVal: p => p.sharks_evaded || 0 },
         { id: 'yoinks', head: '<th>Yoinks</th>', getVal: p => p.yoinks || 0 },
         { id: 'fish', head: '<th>Fish<br>Eaten</th>', getVal: p => p.fish_eaten || 0 },
+        { id: 'avg', head: '<th>Average<br>Guesses</th>', getVal: p => formatAverageGuesses(p.all_time_guesses, p.all_time_puzzles_played) },
         { id: 'sotw', head: '<th>Shark of<br>the Week<br>Awards</th>', getVal: p => p.shark_of_the_week_wins || 0 },
-        { id: 'avg', head: '<th>Average<br>Guesses</th>', getVal: p => formatAverageGuesses(p.all_time_guesses, p.all_time_puzzles_played) }
+        { id: 'silver', head: '<th>Silver<br>Medals</th>', getVal: p => p.silver_medals || 0 },
+        { id: 'bronze', head: '<th>Bronze<br>Medals</th>', getVal: p => p.bronze_medals || 0 }
     ];
 
     // 2. Rearrange the columns based on the current sort
