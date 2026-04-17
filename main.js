@@ -145,11 +145,18 @@ async function init() {
        
         // --- WEEKLY RECAP CHECK ---
         const recap = await fetchWeeklyRecap();
+        
         if (recap) {
             const lastSeenWeek = localStorage.getItem('jawrgon_last_seen_week');
             
-            // If they haven't seen this specific week's results yet, show the modal
-            if (lastSeenWeek !== recap.weekEnding) {
+            if (!lastSeenWeek) {
+                // Scenario 1: First time loading the update OR a brand new player.
+                // Silently stamp their browser with the current week so they are synced, 
+                // but do NOT show them the modal for a week they didn't see.
+                localStorage.setItem('jawrgon_last_seen_week', recap.weekEnding);
+            } 
+            else if (lastSeenWeek !== recap.weekEnding) {
+                // Scenario 2: They have a stamp, but a new Sunday reset has happened!
                 showWeeklyRecap(recap);
                 
                 // Set up the one-time event listener to close and save
