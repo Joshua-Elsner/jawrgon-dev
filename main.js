@@ -469,6 +469,13 @@ document.getElementById('how-to-play-btn').addEventListener('click', () => {
 
 // --- Player Modal Controls ---
 document.getElementById('open-player-modal-btn')?.addEventListener('click', () => {
+    // Wipe the search bar clean every time the modal opens
+    const searchInput = document.getElementById('player-search-input');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input')); // Forces the grid to un-hide everyone
+    }
+    
     toggleScreen('player-modal', true);
 });
 document.getElementById('close-player-x')?.addEventListener('click', () => {
@@ -565,6 +572,23 @@ document.getElementById('stats-sort-select')?.addEventListener('change', () => {
     }
 });
 
+// --- Player Search Filter ---
+document.getElementById('player-search-input')?.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    const buttons = document.querySelectorAll('#player-list-grid button');
+
+    buttons.forEach(btn => {
+        // textContent cleanly grabs the username and ignores the HTML tags for the Shark icon
+        const username = btn.textContent.toLowerCase();
+        
+        if (username.includes(searchTerm)) {
+            btn.classList.remove('hidden');
+        } else {
+            btn.classList.add('hidden');
+        }
+    });
+});
+
 document.getElementById('lose-leaderboard-btn')?.addEventListener('click', () => {
     toggleScreen('lose-modal', false);
     toggleScreen('game-screen', false);
@@ -588,8 +612,8 @@ document.getElementById('back-to-menu-btn')?.addEventListener('click', () => {
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
         console.log("Tab woke up! Fetching true state...");
-        loadGameState(); 
-        loadLeaderboard(); 
+        loadGameState();
+        loadLeaderboard();
     }
 });
 
@@ -665,21 +689,21 @@ document.getElementById('submit-new-word')?.addEventListener('click', async () =
         startNewGame();
         updatePresence(false);
 
-        } catch (error) {
+    } catch (error) {
         setSubmitButtonLoading(false);
         if (error.message && error.message.includes('Word already used')) {
             showToast("That word has already been used in a past game!");
         } else if (error.message && error.message.includes('TOO SLOW!!!')) {
             // Wipe their board, fetch the new reality, and kick them out of the modal
             showToast("Oops! Someone else already guessed it! You may have a bad connection.");
-            
+
             toggleScreen('win-modal', false);
             toggleScreen('game-screen', false);
-            
+
             clearBoardState();
-            await loadGameState(); 
+            await loadGameState();
             startNewGame();
-            
+
             toggleScreen('home-screen', true);
             updatePresence(false);
         } else {
