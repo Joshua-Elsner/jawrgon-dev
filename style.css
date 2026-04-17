@@ -833,10 +833,6 @@ tr.has-crown td {
 
 /* Mobile table adjustments */
 @media (max-width: 500px) {
-    h1 {
-        font-size: 1.8rem;
-    }
-
     .stats-controls label, #stats-sort-select {
         font-size: 0.85rem;
     }
