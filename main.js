@@ -39,13 +39,6 @@ async function init() {
         setStartButtonLoading();
         setPlayerGridLoading();
 
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('discord_linked') === 'success') {
-            showToast("Discord successfully linked!");
-            // Clean up the URL so the parameter disappears
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
          setWeekEndingDate();
 
         await loadGameState();
@@ -423,30 +416,6 @@ document.getElementById('open-player-modal-btn')?.addEventListener('click', () =
 });
 document.getElementById('close-player-x')?.addEventListener('click', () => {
     toggleScreen('player-modal', false);
-});
-document.getElementById('link-discord-btn')?.addEventListener('click', () => {
-    console.log(" 1. The button was successfully clicked!");
-
-    // Check if they are a guest
-    if (gameState.currentPlayer === "Guest" || !gameState.currentPlayerId) {
-        console.log("2. Blocked: No player is selected. They are currently a Guest.");
-        showToast("You must select or create a player first!");
-        return;
-    }
-
-    console.log("3. Player is selected. Building the Discord URL...");
-
-    // Make sure you put your REAL Discord Client ID here!
-    const clientId = '1490905676635967508';
-    const redirectUri = encodeURIComponent('https://okbynkairmznzcriuknd.supabase.co/functions/v1/discord-callback');
-    const state = gameState.currentPlayerId;
-
-    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=identify&state=${state}`;
-
-    console.log("🚀 4. Redirecting browser to:", discordAuthUrl);
-
-    // This is the line that actually changes the page
-    window.location.href = discordAuthUrl;
 });
 
 // --- Create New Player ---
