@@ -210,6 +210,7 @@ export async function fetchLastWeekWinners() {
 
 /**
  * Fetches the top 3 winners from the most recently completed week with their usernames
+ * 
  */
 export async function fetchWeeklyRecap() {
     const { data, error } = await supabase
@@ -217,19 +218,28 @@ export async function fetchWeeklyRecap() {
         .select(`
             time_as_shark,
             week_ending,
+            is_jawbreaker,
+            is_robster,
+            is_apex_predator,
+            is_efishent,
             players ( id, username )
         `)
         .order('week_ending', { ascending: false })
         .order('time_as_shark', { ascending: false })
-        .limit(3);
+        .limit(20); // Expanded limit to catch players who won an award but didn't place top 3 in time
 
     if (error || !data || data.length === 0) return null;
 
-    // Isolate the single most recent date in the archive
     const latestWeek = data[0].week_ending;
-    
-    // Filter to ensure we only return players from that exact date
-    const winners = data.filter(row => row.week_ending === latestWeek);
+    const allParticipants = data.filter(row => row.week_ending === latestWeek);
 
-    return { weekEnding: latestWeek, winners };
+    // Isolate the top 3 times for the podium, plus our specific award winners
+    return { 
+        weekEnding: latestWeek, 
+        podium: allParticipants.slice(0, 3),
+        jawbreaker: allParticipants.find(p => p.is_jawbreaker),
+        robster: allParticipants.find(p => p.is_robster),
+        apex: allParticipants.find(p => p.is_apex_predator),
+        efishent: allParticipants.find(p => p.is_efishent)
+    };
 }
