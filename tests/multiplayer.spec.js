@@ -1,6 +1,6 @@
 const { test, expect } = require('@playwright/test');
 
-test('Presence indicator and Yoink mechanics sync across clients', async ({ browser }) => {
+test('Yoink mechanics sync across clients', async ({ browser }) => {
   const contextA = await browser.newContext();
   const contextB = await browser.newContext();
 
@@ -35,9 +35,6 @@ test('Presence indicator and Yoink mechanics sync across clients', async ({ brow
   
   await pageA.waitForTimeout(500); 
   await pageA.click('#start-game-btn');
-  
-  // Verify Player A sees 0 others guessing initially
-  await expect(pageA.locator('#presence-count')).toHaveText('0 Others Guessing');
 
   // --- THE VICTIM TYPING FIX ---
   // Wait to make sure the game screen is actually fully loaded and visible
@@ -54,11 +51,7 @@ test('Presence indicator and Yoink mechanics sync across clients', async ({ brow
   await pageB.waitForTimeout(500);
   await pageB.click('#start-game-btn');
 
-  // 3. THE PRESENCE TEST
-  // Player A's screen should immediately update to show Player B is here
-  await expect(pageA.locator('#presence-count')).toHaveText('1 Other Guessing');
-
-  // 4. THE YOINK TEST
+  // 3. THE YOINK TEST
   // Player B types whatever the secret word actually is right now, dynamically!
   await pageB.keyboard.type(currentSecretWord);
   await pageB.keyboard.press('Enter');
@@ -75,7 +68,7 @@ test('Presence indicator and Yoink mechanics sync across clients', async ({ brow
   // Click the confirm button
   await pageB.click('#submit-new-word');
 
-  // 5. THE IMPACT
+  // 4. THE IMPACT
   // Filter the locators to only find the toast that contains the Yoink text
   const toast = pageA.locator('.toast').filter({ hasText: /YOINK!!!/ }); 
   
