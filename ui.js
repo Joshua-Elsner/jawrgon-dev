@@ -328,16 +328,24 @@ export function showWeeklyRecap(recapData) {
     const modal = document.getElementById('weekly-recap-modal');
     const weekText = document.getElementById('recap-week-text');
     const podium = document.getElementById('podium-container');
+    
+    // Grab both buttons
+    const nextBtn = document.getElementById('next-recap-btn');
+    const closeBtn = document.getElementById('close-recap-btn');
 
     if (!modal || !podium) return;
 
     const dateObj = new Date(recapData.weekEnding);
     dateObj.setMinutes(dateObj.getMinutes() + dateObj.getTimezoneOffset());
     weekText.textContent = `Week ending ${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
-    
-    podium.innerHTML = '';
 
-    // Render the Top 3 Podium
+    // Initialize two separate wrapper divs for pagination
+    let page1HTML = `<div id="recap-page-1" style="display: flex; flex-direction: column; gap: 12px;">`;
+    let page2HTML = `<div id="recap-page-2" class="hidden" style="display: flex; flex-direction: column; gap: 12px;">`;
+
+    // ==========================================
+    // PAGE 1: The Podium (Top 3)
+    // ==========================================
     const medals = ['👑 Shark of the Week', '🥈 Silver Medal', '🥉 Bronze Medal'];
     const colors = ['#ffd700', '#c0c0c0', '#cd7f32'];
     
@@ -345,7 +353,7 @@ export function showWeeklyRecap(recapData) {
         const name = winner.players ? winner.players.username : 'Unknown Fish';
         const time = formatSharkTime(winner.time_as_shark, false);
         
-        podium.innerHTML += `
+        page1HTML += `
             <div style="background-color: var(--color-background); padding: 15px; border-radius: 8px; border-left: 5px solid ${colors[index]}; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <div style="color: ${colors[index]}; font-weight: bold; font-size: 0.85rem; text-transform: uppercase;">${medals[index]}</div>
@@ -357,18 +365,22 @@ export function showWeeklyRecap(recapData) {
             </div>
         `;
     });
+    
+    page1HTML += `</div>`; // Close page 1
 
-    // Render the Special Awards
+    // ==========================================
+    // PAGE 2: Special Awards
+    // ==========================================
     const awards = [
-        { data: recapData.jawbreaker, title: "🍬 Jawbreaker", desc: "Most Words Solved" },
+        { data: recapData.jawbreaker, title: "🥊 Jawbreaker", desc: "Most Words Solved" },
         { data: recapData.robster, title: "🦞 Robster", desc: "Most Yoinks" },
         { data: recapData.apex, title: "🦈 Apex Predator", desc: "Most Fish Eaten" },
-        { data: recapData.efishent, title: "⏱️ E-fish-ent", desc: "Lowest Avg Guesses" }
+        { data: recapData.efishent, title: "🧠 E-fish-ent", desc: "Lowest Avg Guesses" }
     ];
 
     awards.forEach(award => {
         if (award.data && award.data.players) {
-            podium.innerHTML += `
+            page2HTML += `
                 <div style="background-color: rgba(125, 211, 252, 0.1); padding: 10px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
                     <div>
                         <div style="color: var(--color-text); font-weight: bold; font-size: 0.85rem; text-transform: uppercase;">${award.title}</div>
@@ -381,6 +393,25 @@ export function showWeeklyRecap(recapData) {
             `;
         }
     });
+
+    page2HTML += `</div>`; // Close page 2
+
+    // Inject both pages into the container
+    podium.innerHTML = page1HTML + page2HTML;
+
+    // Reset button visibility (critical for when the modal is opened again)
+    if (nextBtn) nextBtn.classList.remove('hidden');
+    if (closeBtn) closeBtn.classList.add('hidden');
+
+    // Attach pagination logic to the "Next" button
+    if (nextBtn) {
+        nextBtn.onclick = () => {
+            document.getElementById('recap-page-1').classList.add('hidden');
+            document.getElementById('recap-page-2').classList.remove('hidden');
+            nextBtn.classList.add('hidden');
+            closeBtn.classList.remove('hidden');
+        };
+    }
 
     modal.classList.remove('hidden');
 }
