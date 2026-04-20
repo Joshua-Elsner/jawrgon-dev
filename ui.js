@@ -267,8 +267,13 @@ export function setSuggestionsLoading() {
     const sug2Btn = document.getElementById('suggestion-2');
 
     if (suggestionsContainer && sug1Btn && sug2Btn) {
+        // Set the first button to loading and disable it
         sug1Btn.textContent = "Loading...";
-        sug2Btn.textContent = "Loading...";
+        sug1Btn.disabled = true; 
+        
+        // Hide the second button completely
+        sug2Btn.classList.add('hidden'); 
+        
         suggestionsContainer.classList.remove('hidden');
     }
 }
@@ -284,10 +289,15 @@ export function renderWordSuggestions(word1, word2) {
 
     if (!suggestionsContainer || !sug1Btn || !sug2Btn) return;
 
+    // Apply the new words
     sug1Btn.textContent = word1;
     sug2Btn.textContent = word2;
+    
+    // Restore the buttons to their active, visible states
+    sug1Btn.disabled = false;
+    sug2Btn.classList.remove('hidden');
 
-    // Auto-fill the input when clicked
+    // Reattach the click events
     sug1Btn.onclick = () => { newWordInput.value = word1; newWordInput.focus(); };
     sug2Btn.onclick = () => { newWordInput.value = word2; newWordInput.focus(); };
 
