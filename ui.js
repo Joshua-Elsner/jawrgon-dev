@@ -630,3 +630,18 @@ function formatAverageGuesses(totalGuesses, gamesPlayed) {
     
     return (guesses / games).toFixed(1);
 }
+
+/**
+ * Sanitizes untrusted user input to prevent XSS attacks 
+ * when injecting variables into innerHTML strings.
+ */
+export function escapeHTML(str) {
+    if (!str) return "";
+    return String(str).replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+    }[tag]));
+}

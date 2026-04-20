@@ -24,7 +24,7 @@ import {
     renderPlayerStatsTable, updateGuessCounter,
     setWeekEndingDate, setStartButtonLoading, setPlayerGridLoading,
     setLeaderboardLoading, setStatsLoading, setSuggestionsLoading,
-    showWeeklyRecap 
+    showWeeklyRecap, escapeHTML
 } from './ui.js';
 
 // ==========================================
@@ -61,7 +61,7 @@ async function init() {
 
                 if (isGameVisible && oldSecretWord !== gameState.secretWord) {
                     if ((isCurrentlyPlaying && !gameState.isGameOver) || isSettingWord) {
-                        showToast(`YOINK!!!\n<span class="toast-highlight">${gameState.currentShark}</span> guessed it!\nWord was: <span class="toast-highlight">${oldSecretWord}</span>`, 4000);
+                        showToast(`YOINK!!!\n<span class="toast-highlight">${escapeHTML(gameState.currentShark)}</span> guessed it!\nWord was: <span class="toast-highlight">${escapeHTML(oldSecretWord)}</span>`, 4000);
                         if (isSettingWord) {
                             toggleScreen('win-modal', false);
                         }
@@ -78,7 +78,7 @@ async function init() {
             // Callback for Yoink Broadcasts
             (payload) => {
                 if (gameState.currentPlayerId === payload.sharkId) {
-                    showToast(`<span class="toast-highlight">${payload.yoinkedName}</span> got yoinked! Gottem!`, 3500);
+                    showToast(`<span class="toast-highlight">${escapeHTML(payload.yoinkedName)}</span> got yoinked! Gottem!`, 3500);
                 }
             }
         );
