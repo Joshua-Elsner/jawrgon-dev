@@ -331,20 +331,19 @@ export function showWeeklyRecap(recapData) {
 
     if (!modal || !podium) return;
 
-    // Format the date nicely (e.g., "2024-05-12" -> "5/12")
     const dateObj = new Date(recapData.weekEnding);
-    // Add timezone offset fix so midnight UTC doesn't roll backwards a day
-    dateObj.setMinutes(dateObj.getMinutes() + dateObj.getTimezoneOffset()); 
+    dateObj.setMinutes(dateObj.getMinutes() + dateObj.getTimezoneOffset());
     weekText.textContent = `Week ending ${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
     
     podium.innerHTML = '';
 
+    // Render the Top 3 Podium
     const medals = ['👑 Shark of the Week', '🥈 Silver Medal', '🥉 Bronze Medal'];
     const colors = ['#ffd700', '#c0c0c0', '#cd7f32'];
-
-    recapData.winners.forEach((winner, index) => {
+    
+    recapData.podium.forEach((winner, index) => {
         const name = winner.players ? winner.players.username : 'Unknown Fish';
-        const time = formatSharkTime(winner.time_as_shark, false); // Reusing your existing time formatter
+        const time = formatSharkTime(winner.time_as_shark, false);
         
         podium.innerHTML += `
             <div style="background-color: var(--color-background); padding: 15px; border-radius: 8px; border-left: 5px solid ${colors[index]}; display: flex; justify-content: space-between; align-items: center;">
@@ -357,6 +356,30 @@ export function showWeeklyRecap(recapData) {
                 </div>
             </div>
         `;
+    });
+
+    // Render the Special Awards
+    const awards = [
+        { data: recapData.jawbreaker, title: "🍬 Jawbreaker", desc: "Most Words Solved" },
+        { data: recapData.robster, title: "🦞 Robster", desc: "Most Yoinks" },
+        { data: recapData.apex, title: "🦈 Apex Predator", desc: "Most Fish Eaten" },
+        { data: recapData.efishent, title: "⏱️ E-fish-ent", desc: "Lowest Avg Guesses" }
+    ];
+
+    awards.forEach(award => {
+        if (award.data && award.data.players) {
+            podium.innerHTML += `
+                <div style="background-color: rgba(125, 211, 252, 0.1); padding: 10px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                    <div>
+                        <div style="color: var(--color-text); font-weight: bold; font-size: 0.85rem; text-transform: uppercase;">${award.title}</div>
+                        <div style="font-size: 0.75rem; color: #888;">${award.desc}</div>
+                    </div>
+                    <div style="font-size: 1.1rem; color: white;">
+                        ${award.data.players.username}
+                    </div>
+                </div>
+            `;
+        }
     });
 
     modal.classList.remove('hidden');
