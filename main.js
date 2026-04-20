@@ -480,6 +480,7 @@ document.getElementById('stats-sort-select')?.addEventListener('change', () => {
     const statsContainer = document.querySelector('.stats-container');
     if (statsContainer) {
         statsContainer.scrollLeft = 0;
+        statsContainer.scrollTop = 0;
     }
 });
 
