@@ -663,61 +663,6 @@ button:disabled:hover {
     transform: translateY(0px); /* Pushes down when clicked */
 }
 
-/* ==========================================
-   PRESENCE INDICATOR
-   ========================================== */
-
-.presence-container {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: var(--color-tile-border);
-    padding: 8px 12px;
-    border-radius: 20px;
-    border: 1px solid var(--color-accent);
-    z-index: 1000; /* Stays on top of everything */
-    font-size: 0.85rem;
-    font-weight: bold;
-    color: var(--color-text);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-}
-
-.presence-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background-color: var(--color-correct); /* Green */
-}
-
-.presence-dot.inactive {
-    background-color: var(--color-absent); /* Gray */
-    animation: none;
-}
-
-.presence-dot.active {
-    background-color: var(--color-correct);
-    animation: pulse-green 1.5s infinite;
-}
-
-@keyframes pulse-green {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(45, 202, 45, 0.7); }
-    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(45, 202, 45, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(45, 202, 45, 0); }
-}
-
-@media (max-width: 500px) {
-    .presence-container {
-        top: 10px;
-        right: 10px;
-        padding: 6px 10px;
-        font-size: 0.75rem;
-    }
-}
-
 .toast-highlight {
     color: #ff4444;
     font-weight: 900;
