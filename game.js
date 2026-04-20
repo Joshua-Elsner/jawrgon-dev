@@ -203,6 +203,12 @@ export function processPlayerStatsData(players, sortBy = 'alpha') {
         if (sortBy === 'silver') return (b.silver_medals || 0) - (a.silver_medals || 0);
         if (sortBy === 'bronze') return (b.bronze_medals || 0) - (a.bronze_medals || 0);
         
+        // NEW AWARDS SORTING LOGIC
+        if (sortBy === 'jawbreaker') return (b.jawbreaker_awards || 0) - (a.jawbreaker_awards || 0);
+        if (sortBy === 'robster') return (b.robster_awards || 0) - (a.robster_awards || 0);
+        if (sortBy === 'apex') return (b.apex_predator_awards || 0) - (a.apex_predator_awards || 0);
+        if (sortBy === 'efishent') return (b.efishent_awards || 0) - (a.efishent_awards || 0);
+        
         if (sortBy === 'avg') {
             const playedA = a.all_time_puzzles_played || 0;
             const playedB = b.all_time_puzzles_played || 0;
@@ -214,6 +220,7 @@ export function processPlayerStatsData(players, sortBy = 'alpha') {
             // Sort ascending (lowest average wins!)
             if (avgA !== avgB) return avgA - avgB;
         }
+        
         // Default: Alphabetical (Also acts as the tie-breaker if both have Infinity)
         return a.username.localeCompare(b.username, undefined, { sensitivity: 'base' });
     });
