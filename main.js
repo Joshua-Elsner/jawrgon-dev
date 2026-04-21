@@ -350,6 +350,11 @@ document.querySelectorAll('.key').forEach(key => {
     });
 });
 
+// Intercepts and kills double-clicks before the mobile browser can use them to zoom
+document.addEventListener('dblclick', (e) => {
+    e.preventDefault();
+}, { passive: false });
+
 document.addEventListener('keydown', (e) => {
     if (gameState.isGameOver) return;
 
