@@ -35,6 +35,7 @@ body {
 
 button, .key {
     transition: all 0.2s ease;
+    touch-action: manipulation;
 }
 
 h1 {
@@ -147,6 +148,7 @@ h2 {
     cursor: pointer; /*Turns mouse into pointing hand when hovering*/
     user-select: none; 
     text-transform: uppercase;
+    touch-action: none;
 }
 
 .wide-key {
@@ -598,27 +600,49 @@ button:disabled:hover {
 }
 
 /* ==========================================
-   SPRITES
+   SPRITES & NAMEPLATES
    ========================================== */
 
-#top-shark {
+.sprite-name {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--color-text);
+    background-color: rgba(15, 23, 42, 0.6); /* Slight background so it doesn't get lost in bubbles */
+    padding: 2px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    pointer-events: none;
+}
+
+#shark-container {
     position: absolute;
-    top: -30px; /* Locks it to the top of the game screen */
-    width: 180px; /* Adjust based on your image size */
-    z-index: 10; /* Ensures it stays on top of the bubbles/fish */
-    
-    /* Reuses your existing bubble animation to make it float menacingly! */
+    top: -30px; 
+    z-index: 10; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
     animation: idleBob 4s ease-in-out infinite alternate;
 }
 
-#board-fish {
-    width: 80px; /* Adjust based on your image size */
-    align-self: center; /* Centers it above the bubbles */
-    margin-bottom: -15px; /* The gap between the fish and the top row */
-    z-index: 5;
-    
-    /* Reuses your animation so the fish swims in place */
+#top-shark {
+    width: 180px; 
+}
+
+#fish-container {
+    align-self: center; 
+    margin-bottom: -15px; 
+    z-index: 5; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
     animation: idleBob 2.5s ease-in-out infinite;
+}
+
+#board-fish {
+    width: 80px; 
 }
 
 .circle-btn {
@@ -663,81 +687,9 @@ button:disabled:hover {
     transform: translateY(0px); /* Pushes down when clicked */
 }
 
-/* ==========================================
-   PRESENCE INDICATOR
-   ========================================== */
-
-.presence-container {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: var(--color-tile-border);
-    padding: 8px 12px;
-    border-radius: 20px;
-    border: 1px solid var(--color-accent);
-    z-index: 1000; /* Stays on top of everything */
-    font-size: 0.85rem;
-    font-weight: bold;
-    color: var(--color-text);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-}
-
-.presence-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background-color: var(--color-correct); /* Green */
-}
-
-.presence-dot.inactive {
-    background-color: var(--color-absent); /* Gray */
-    animation: none;
-}
-
-.presence-dot.active {
-    background-color: var(--color-correct);
-    animation: pulse-green 1.5s infinite;
-}
-
-@keyframes pulse-green {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(45, 202, 45, 0.7); }
-    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(45, 202, 45, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(45, 202, 45, 0); }
-}
-
-@media (max-width: 500px) {
-    .presence-container {
-        top: 10px;
-        right: 10px;
-        padding: 6px 10px;
-        font-size: 0.75rem;
-    }
-}
-
 .toast-highlight {
     color: #ff4444;
     font-weight: 900;
-}
-
-.prev-winner-crown {
-    position: absolute;
-    top: -24px; /* Adjust this to move the crown higher/lower */
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 1.3rem; /* Adjust crown size */
-    line-height: 1;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-    cursor: default;
-    user-select: none;
-}
-
-/* Gives extra headroom specifically for the row with the crown */
-tr.has-crown td {
-    padding-top: 30px !important; /* Normal is 12px, giving the crown 18px of space */
 }
 
 #player-stats-screen {

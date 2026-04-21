@@ -5,6 +5,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const supabaseUrl = 'https://okbynkairmznzcriuknd.supabase.co';
 const supabaseKey = 'sb_publishable_ZJGYQbdtUaABBX1lhOw8qw_Ksiw-S54';
 
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 let gameEventsChannel;
@@ -185,133 +186,6 @@ export function sendYoinkBroadcast(sharkId, yoinkedName) {
     }
 }
 
-// ==========================================
-// PRESENCE (Others Guessing)
-// ==========================================
-
-let presenceChannel;
-let amIGuessing = false; // System memory of where you actually are
-
-// Generate and EXPORT the ID so main.js can access it directly
-export const mySessionId = (typeof crypto.randomUUID === 'function') 
-    ? crypto.randomUUID() 
-    : Math.random().toString(36).substring(2, 15);
-
-export function setupPresence(onSyncCallback) {
-    presenceChannel = supabase.channel('jawrgon-presence', {
-        config: { presence: { key: mySessionId } },
-    });
-
-    presenceChannel
-        .on('presence', { event: 'sync' }, () => {
-            const state = presenceChannel.presenceState();
-            onSyncCallback(state, mySessionId);
-        })
-        .subscribe(async (status) => {
-            if (status === 'SUBSCRIBED') {
-                // When waking up from sleep, restore the saved state
-                await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
-            }
-        });
-
-        // --- 1. THE HEARTBEAT (The Failsafe) ---
-    setInterval(() => {
-        if (amIGuessing && document.visibilityState === 'visible' && navigator.onLine) {
-            updatePresence(true); // Now uses the safe queue!
-        }
-    }, 10000);
-
-    // --- 2. MODERN MOBILE LIFECYCLE ---
-    document.addEventListener('visibilitychange', () => {
-        if (!presenceChannel) return;
-        if (document.visibilityState === 'hidden') {
-            updatePresence(false);
-        } else if (document.visibilityState === 'visible') {
-            updatePresence(amIGuessing);
-        }
-    });
-
-    // --- 3. CONNECTION LOSS ---
-    window.addEventListener('offline', () => {
-        if (presenceChannel) updatePresence(false);
-    });
-    
-    window.addEventListener('online', () => {
-        if (presenceChannel) updatePresence(amIGuessing);
-    });
-
-    // Explicitly rip the connection down if they close the tab (Desktop)
-    window.addEventListener('beforeunload', () => {
-        if (presenceChannel) {
-            presenceChannel.untrack();
-            supabase.removeChannel(presenceChannel); 
-        }
-    });
-
-    // If the user loses wifi, instantly update state if possible
-    window.addEventListener('offline', async () => {
-        if (presenceChannel) await presenceChannel.track({ isGuessing: false, updatedAt: Date.now() });
-    });
-    
-    // When wifi returns, restore their real state
-    window.addEventListener('online', async () => {
-        if (presenceChannel) await presenceChannel.track({ isGuessing: amIGuessing, updatedAt: Date.now() });
-    });
-}
-
-// ==========================================
-// PRESENCE QUEUE & MONOTONIC CLOCK
-// Defeats Millisecond Collisions & State Tearing
-// ==========================================
-
-let isPresenceUpdating = false;
-let presenceQueue = null;
-let lastPresenceTimestamp = 0;
-
-// Guarantees every timestamp is chronologically larger than the last!
-function getPresenceTimestamp() {
-    let now = Date.now();
-    if (now <= lastPresenceTimestamp) {
-        now = lastPresenceTimestamp + 1;
-    }
-    lastPresenceTimestamp = now;
-    return now;
-}
-
-export async function updatePresence(isGuessing) {
-    amIGuessing = isGuessing; // Instantly save to memory for lifecycles
-
-    if (!presenceChannel) return;
-
-    // 1. If we are talking to the server, take a ticket and wait!
-    if (isPresenceUpdating) {
-        presenceQueue = isGuessing;
-        return;
-    }
-
-    isPresenceUpdating = true;
-
-    // 2. Capture the exact state and a safe, unique timestamp
-    const stateToTransmit = isGuessing;
-    const safeTimestamp = getPresenceTimestamp();
-
-    try {
-        await presenceChannel.track({ isGuessing: stateToTransmit, updatedAt: safeTimestamp });
-    } catch (e) {
-        console.error("Presence tracking failed:", e);
-    } finally {
-        isPresenceUpdating = false;
-        
-        // 3. If the user spam-clicked while we were transmitting, 
-        // the queue holds their final destination. Send it now!
-        if (presenceQueue !== null) {
-            const nextState = presenceQueue;
-            presenceQueue = null;
-            updatePresence(nextState);
-        }
-    }
-}
-
 /**
  * Fetches the 1st, 2nd, and 3rd place winners from the most recently completed week
  * @returns {Promise<Array>} Array of player UUIDs
@@ -336,6 +210,7 @@ export async function fetchLastWeekWinners() {
 
 /**
  * Fetches the top 3 winners from the most recently completed week with their usernames
+ * 
  */
 export async function fetchWeeklyRecap() {
     const { data, error } = await supabase
@@ -343,19 +218,28 @@ export async function fetchWeeklyRecap() {
         .select(`
             time_as_shark,
             week_ending,
+            is_jawbreaker,
+            is_robster,
+            is_apex_predator,
+            is_efishent,
             players ( id, username )
         `)
         .order('week_ending', { ascending: false })
         .order('time_as_shark', { ascending: false })
-        .limit(3);
+        .limit(20); // Expanded limit to catch players who won an award but didn't place top 3 in time
 
     if (error || !data || data.length === 0) return null;
 
-    // Isolate the single most recent date in the archive
     const latestWeek = data[0].week_ending;
-    
-    // Filter to ensure we only return players from that exact date
-    const winners = data.filter(row => row.week_ending === latestWeek);
+    const allParticipants = data.filter(row => row.week_ending === latestWeek);
 
-    return { weekEnding: latestWeek, winners };
+    // Isolate the top 3 times for the podium, plus our specific award winners
+    return { 
+        weekEnding: latestWeek, 
+        podium: allParticipants.slice(0, 3),
+        jawbreaker: allParticipants.find(p => p.is_jawbreaker),
+        robster: allParticipants.find(p => p.is_robster),
+        apex: allParticipants.find(p => p.is_apex_predator),
+        efishent: allParticipants.find(p => p.is_efishent)
+    };
 }

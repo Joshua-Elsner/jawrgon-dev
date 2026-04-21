@@ -6,7 +6,6 @@ import {
     claimSharkTitle, recordSharkMeal, fetchWordSuggestions,
     setupRealtimeSubscriptions, createNewPlayer,
     recordYoink, sendYoinkBroadcast,
-    setupPresence, updatePresence, mySessionId,
     fetchLastWeekWinners, fetchWeeklyRecap
 } from './api.js';
 
@@ -22,10 +21,10 @@ import {
     shakeRow, revealNextRow, updateSharkDisplay, updateStartButton,
     renderPlayerList, toggleScreen, setupWinModal,
     renderWordSuggestions, setSubmitButtonLoading, renderLeaderboardTable,
-    renderPlayerStatsTable, updateGuessCounter, updatePresenceUI,
+    renderPlayerStatsTable, updateGuessCounter,
     setWeekEndingDate, setStartButtonLoading, setPlayerGridLoading,
     setLeaderboardLoading, setStatsLoading, setSuggestionsLoading,
-    showWeeklyRecap 
+    showWeeklyRecap, escapeHTML
 } from './ui.js';
 
 // ==========================================
@@ -39,13 +38,6 @@ async function init() {
 
         setStartButtonLoading();
         setPlayerGridLoading();
-
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('discord_linked') === 'success') {
-            showToast("Discord successfully linked!");
-            // Clean up the URL so the parameter disappears
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
 
          setWeekEndingDate();
 
@@ -69,7 +61,7 @@ async function init() {
 
                 if (isGameVisible && oldSecretWord !== gameState.secretWord) {
                     if ((isCurrentlyPlaying && !gameState.isGameOver) || isSettingWord) {
-                        showToast(`YOINK!!!\n<span class="toast-highlight">${gameState.currentShark}</span> guessed it!\nWord was: <span class="toast-highlight">${oldSecretWord}</span>`, 4000);
+                        showToast(`YOINK!!!\n<span class="toast-highlight">${escapeHTML(gameState.currentShark)}</span> guessed it!\nWord was: <span class="toast-highlight">${escapeHTML(oldSecretWord)}</span>`, 4000);
                         if (isSettingWord) {
                             toggleScreen('win-modal', false);
                         }
@@ -86,62 +78,10 @@ async function init() {
             // Callback for Yoink Broadcasts
             (payload) => {
                 if (gameState.currentPlayerId === payload.sharkId) {
-                    showToast(`<span class="toast-highlight">${payload.yoinkedName}</span> got yoinked! Gottem!`, 3500);
+                    showToast(`<span class="toast-highlight">${escapeHTML(payload.yoinkedName)}</span> got yoinked! Gottem!`, 3500);
                 }
             }
         );
-
-        // 2. Setup the live Presence tracker with Auto-Culling
-        let latestPresenceState = {};
-        
-        // NEW: Store the local time we received their last message to defeat Clock Drift
-        let localPresenceData = {}; 
-
-        function evaluatePresence() {
-            let othersGuessingCount = 0;
-            const now = Date.now();
-
-            for (const key in latestPresenceState) {
-                if (key === mySessionId) continue; 
-                
-                // Get this user's most recent sync data
-                const latestObj = latestPresenceState[key].reduce((newest, current) => {
-                    return (current.updatedAt || 0) > (newest.updatedAt || 0) ? current : newest;
-                }, { isGuessing: false, updatedAt: 0 });
-                
-                let localData = localPresenceData[key];
-
-                // NEW FIX: Accept the update if the timestamp is newer OR if their true/false state flipped!
-                if (!localData || 
-                    localData.foreignUpdatedAt !== latestObj.updatedAt || 
-                    localData.isGuessing !== latestObj.isGuessing) {
-                    
-                    localData = {
-                        isGuessing: latestObj.isGuessing,
-                        foreignUpdatedAt: latestObj.updatedAt,
-                        localReceivedAt: now 
-                    };
-                    localPresenceData[key] = localData;
-                }
-
-                // Evaluate using ONLY our local clock to prevent "Ghost Yoink" time drift
-                if (localData.isGuessing && (now - localData.localReceivedAt < 25000)) {
-                    othersGuessingCount++;
-                }
-            }
-            
-            updatePresenceUI(othersGuessingCount);
-        }
-
-        // Whenever the server sends data, save it and evaluate
-        setupPresence((state) => {
-            latestPresenceState = state;
-            evaluatePresence();
-        });
-
-        // Even if the server is quiet, check the data locally every 3 seconds.
-        // This instantly drops people who close tabs or lose internet!
-        setInterval(evaluatePresence, 3000);
        
         // --- WEEKLY RECAP CHECK ---
         const recap = await fetchWeeklyRecap();
@@ -400,9 +340,12 @@ async function handleLoss(isRestore = false) {
 // EVENT LISTENERS
 // ==========================================
 
-// --- Keyboard Input ---
+// --- Virtual Keyboard Input ---
 document.querySelectorAll('.key').forEach(key => {
-    key.addEventListener('click', () => {
+    key.addEventListener('pointerdown', (e) => {
+        // Prevent the browser from firing a delayed 'click' or trying to drag the element
+        e.preventDefault(); 
+        
         handleKeyInput(key.textContent.trim());
     });
 });
@@ -425,7 +368,6 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
     startNewGame();
     toggleScreen('home-screen', false);
     toggleScreen('game-screen', true);
-    updatePresence(true);
 });
 
 document.getElementById('board-return-menu-btn')?.addEventListener('click', async () => {
@@ -435,9 +377,6 @@ document.getElementById('board-return-menu-btn')?.addEventListener('click', asyn
     toggleScreen('game-screen', false);
     toggleScreen('home-screen', true);
     startNewGame();
-
-    // 2. Tell Supabase in the background
-    await updatePresence(false);
 });
 
 document.getElementById('leaderboard-btn').addEventListener('click', () => {
@@ -481,30 +420,6 @@ document.getElementById('open-player-modal-btn')?.addEventListener('click', () =
 document.getElementById('close-player-x')?.addEventListener('click', () => {
     toggleScreen('player-modal', false);
 });
-document.getElementById('link-discord-btn')?.addEventListener('click', () => {
-    console.log(" 1. The button was successfully clicked!");
-
-    // Check if they are a guest
-    if (gameState.currentPlayer === "Guest" || !gameState.currentPlayerId) {
-        console.log("2. Blocked: No player is selected. They are currently a Guest.");
-        showToast("You must select or create a player first!");
-        return;
-    }
-
-    console.log("3. Player is selected. Building the Discord URL...");
-
-    // Make sure you put your REAL Discord Client ID here!
-    const clientId = '1490905676635967508';
-    const redirectUri = encodeURIComponent('https://okbynkairmznzcriuknd.supabase.co/functions/v1/discord-callback');
-    const state = gameState.currentPlayerId;
-
-    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=identify&state=${state}`;
-
-    console.log("🚀 4. Redirecting browser to:", discordAuthUrl);
-
-    // This is the line that actually changes the page
-    window.location.href = discordAuthUrl;
-});
 
 // --- Create New Player ---
 document.getElementById('create-player-btn')?.addEventListener('click', async () => {
@@ -545,21 +460,35 @@ document.getElementById('create-player-btn')?.addEventListener('click', async ()
 });
 
 // --- Modal Controls ---
-document.getElementById('close-how-to-play-btn')?.addEventListener('click', () => toggleScreen('how-to-play-modal', false));
-document.getElementById('close-how-to-x')?.addEventListener('click', () => toggleScreen('how-to-play-modal', false));
-document.getElementById('try-again-btn')?.addEventListener('click', () => {
+// --- Modal Controls ---
+document.getElementById('close-how-to-play-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleScreen('how-to-play-modal', false);
+});
+
+document.getElementById('close-how-to-x')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleScreen('how-to-play-modal', false);
+});
+
+document.getElementById('try-again-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     toggleScreen('lose-modal', false);
     clearBoardState();
     startNewGame();
 });
 
-document.getElementById('lose-menu-btn')?.addEventListener('click', () => {
+document.getElementById('lose-menu-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     toggleScreen('lose-modal', false);
     toggleScreen('game-screen', false);
     toggleScreen('home-screen', true);
     clearBoardState();
     startNewGame();
-    updatePresence(false);
 });
 
 document.getElementById('stats-sort-select')?.addEventListener('change', () => {
@@ -569,6 +498,7 @@ document.getElementById('stats-sort-select')?.addEventListener('change', () => {
     const statsContainer = document.querySelector('.stats-container');
     if (statsContainer) {
         statsContainer.scrollLeft = 0;
+        statsContainer.scrollTop = 0;
     }
 });
 
@@ -599,7 +529,6 @@ document.getElementById('lose-leaderboard-btn')?.addEventListener('click', () =>
     toggleScreen('leaderboard-screen', true);
     clearBoardState();
     startNewGame();
-    updatePresence(false);
 });
 
 document.getElementById('back-to-menu-btn')?.addEventListener('click', () => {
@@ -631,7 +560,11 @@ closableModalIds.forEach(id => {
     const modal = document.getElementById(id);
     if (modal) {
         modal.addEventListener('click', (event) => {
-            if (event.target === modal) toggleScreen(id, false);
+            if (event.target === modal) {
+                event.preventDefault();
+                event.stopPropagation();
+                toggleScreen(id, false);
+            }
         });
     }
 });
@@ -644,7 +577,6 @@ document.getElementById('submit-new-word')?.addEventListener('click', async () =
         toggleScreen('home-screen', true);
         clearBoardState();
         startNewGame();
-        updatePresence(false);
         return;
     }
 
@@ -687,7 +619,6 @@ document.getElementById('submit-new-word')?.addEventListener('click', async () =
         await loadLeaderboard();
         toggleScreen('leaderboard-screen', true);
         startNewGame();
-        updatePresence(false);
 
     } catch (error) {
         setSubmitButtonLoading(false);
@@ -705,7 +636,6 @@ document.getElementById('submit-new-word')?.addEventListener('click', async () =
             startNewGame();
 
             toggleScreen('home-screen', true);
-            updatePresence(false);
         } else {
             showToast(error.message || "Failed to update the database.");
         }
