@@ -31,6 +31,7 @@ body {
     padding: 0;
     height: 100dvh;
     overflow: hidden;
+    touch-action: manipulation;
 }
 
 button, .key {
@@ -123,6 +124,7 @@ h2 {
     padding: 10px 10px 2px 10px;
 
     margin-bottom: 0px;
+    touch-action: none;
 }
 
 .keyboard-row {
