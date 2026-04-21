@@ -457,15 +457,30 @@ document.getElementById('create-player-btn')?.addEventListener('click', async ()
 });
 
 // --- Modal Controls ---
-document.getElementById('close-how-to-play-btn')?.addEventListener('click', () => toggleScreen('how-to-play-modal', false));
-document.getElementById('close-how-to-x')?.addEventListener('click', () => toggleScreen('how-to-play-modal', false));
-document.getElementById('try-again-btn')?.addEventListener('click', () => {
+// --- Modal Controls ---
+document.getElementById('close-how-to-play-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleScreen('how-to-play-modal', false);
+});
+
+document.getElementById('close-how-to-x')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleScreen('how-to-play-modal', false);
+});
+
+document.getElementById('try-again-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     toggleScreen('lose-modal', false);
     clearBoardState();
     startNewGame();
 });
 
-document.getElementById('lose-menu-btn')?.addEventListener('click', () => {
+document.getElementById('lose-menu-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     toggleScreen('lose-modal', false);
     toggleScreen('game-screen', false);
     toggleScreen('home-screen', true);
