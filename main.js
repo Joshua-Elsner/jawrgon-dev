@@ -33,7 +33,6 @@ import {
 // ==========================================
 
 let timerInterval = null;
-cacheKeyGeometries();
 
 async function init() {
     try {
@@ -41,7 +40,7 @@ async function init() {
         setStartButtonLoading();
         setPlayerGridLoading();
 
-         setWeekEndingDate();
+        setWeekEndingDate();
 
         await loadGameState();
         await loadLeaderboard();
@@ -84,23 +83,23 @@ async function init() {
                 }
             }
         );
-       
+
         // --- WEEKLY RECAP CHECK ---
         const recap = await fetchWeeklyRecap();
-        
+
         if (recap) {
             const lastSeenWeek = localStorage.getItem('jawrgon_last_seen_week');
-            
+
             if (!lastSeenWeek) {
                 // Scenario 1: First time loading the update OR a brand new player.
                 // Silently stamp their browser with the current week so they are synced, 
                 // but do NOT show them the modal for a week they didn't see.
                 localStorage.setItem('jawrgon_last_seen_week', recap.weekEnding);
-            } 
+            }
             else if (lastSeenWeek !== recap.weekEnding) {
                 // Scenario 2: They have a stamp, but a new Sunday reset has happened!
                 showWeeklyRecap(recap);
-                
+
                 // Set up the one-time event listener to close and save
                 document.getElementById('close-recap-btn').onclick = () => {
                     localStorage.setItem('jawrgon_last_seen_week', recap.weekEnding);
@@ -170,11 +169,11 @@ function updatePlayerStatsUI() {
 
     const sortSelect = document.getElementById('stats-sort-select');
     const currentSort = sortSelect ? sortSelect.value : 'alpha';
-    
+
     const sortedStats = processPlayerStatsData(gameState.cachedPlayers, currentSort);
-    
+
     // Pass currentSort into the render function
-    renderPlayerStatsTable(sortedStats, currentSort); 
+    renderPlayerStatsTable(sortedStats, currentSort);
 }
 
 function startSharkTimer() {
@@ -184,7 +183,7 @@ function startSharkTimer() {
     timerInterval = setInterval(() => {
         const leaderboardScreen = document.getElementById('leaderboard-screen');
         const statsScreen = document.getElementById('player-stats-screen');
-        
+
         // Only run heavy sorting/rendering if they are actually looking at the screen
         if (leaderboardScreen && !leaderboardScreen.classList.contains('hidden')) {
             updateLeaderboardUI();
@@ -222,7 +221,7 @@ function restoreBoardUI() {
     if (gameState.isGameOver) {
         const lastGuess = gameState.submittedGuesses[gameState.submittedGuesses.length - 1];
         if (lastGuess === gameState.secretWord) {
-            handleWin(); 
+            handleWin();
         } else {
             handleLoss(true); // Pass true to prevent double-awarding "Fish eaten"
         }
@@ -250,7 +249,7 @@ function handleKeyInput(letter) {
 
     if (letter === "ENTER") {
         submitGuess();
-        } else if (letter === "BACK" || letter === "BACKSPACE") {
+    } else if (letter === "BACK" || letter === "BACKSPACE") {
         clearSelection(); // NEW
         if (deleteLetterFromState()) {
             updateTileText(gameState.currentRow, gameState.currentTile, "");
@@ -347,9 +346,9 @@ async function handleLoss(isRestore = false) {
             // Check if they are retrying the exact same word
             const isRetry = localStorage.getItem('jawrgon_last_lost_word') === gameState.secretWord;
             const guessesUsed = gameState.submittedGuesses.length;
-            
+
             await recordSharkMeal(gameState.currentPlayerId, guessesUsed, isRetry);
-            
+
             // Flag that they have now recorded a loss for this word
             localStorage.setItem('jawrgon_last_lost_word', gameState.secretWord);
         } catch (error) {
@@ -364,6 +363,7 @@ async function handleLoss(isRestore = false) {
 
 // --- Virtual Keyboard Hit Detection ---
 let keyGeometries = [];
+let backspaceTimeout = null; 
 
 function cacheKeyGeometries() {
     keyGeometries = [];
@@ -372,31 +372,17 @@ function cacheKeyGeometries() {
         keyGeometries.push({
             id: key.id,
             textContent: key.textContent.trim(),
-            left: rect.left,
-            right: rect.right,
-            top: rect.top,
-            bottom: rect.bottom
+            // Calculate the exact center X and Y of the key
+            centerX: rect.left + (rect.width / 2),
+            centerY: rect.top + (rect.height / 2)
         });
     });
 }
 
 const keyboardContainer = document.getElementById('keyboard');
-//let backspaceTimeout = null;
 
-keyboardContainer.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
-
-    const x = e.clientX;
-    const y = e.clientY;
-
-    // Find the key whose bounding box contains the pointer coordinates
-    const hitKey = keyGeometries.find(geo => 
-        x >= geo.left && x <= geo.right && y >= geo.top && y <= geo.bottom
-    );
-
-    if (!hitKey) return; // User tapped dead space between keys
-
-    const cancelBackspace = (e) => {
+// 1. Define the cancellation logic OUTSIDE the pointerdown event
+const cancelBackspace = (e) => {
     e.preventDefault();
     if (backspaceTimeout) {
         clearTimeout(backspaceTimeout);
@@ -405,31 +391,42 @@ keyboardContainer.addEventListener('pointerdown', (e) => {
     }
 };
 
+// 2. Attach the main hit detection listener ONCE
 keyboardContainer.addEventListener('pointerdown', (e) => {
     e.preventDefault();
+
     const x = e.clientX;
     const y = e.clientY;
 
-    const hitKey = keyGeometries.find(geo => 
-        x >= geo.left && x <= geo.right && y >= geo.top && y <= geo.bottom
-    );
+    let closestKey = null;
+    let shortestDistance = Infinity;
 
-    if (!hitKey) return;
+    // Loop through all keys to find which center is closest to the tap
+    keyGeometries.forEach(geo => {
+        // Pythagorean theorem to find the distance between the tap and the key center
+        const distance = Math.hypot(geo.centerX - x, geo.centerY - y);
+        
+        if (distance < shortestDistance) {
+            shortestDistance = distance;
+            closestKey = geo;
+        }
+    });
 
-    if (hitKey.id === 'key-backspace') {
+    if (!closestKey) return;
+
+    if (closestKey.id === 'key-backspace') {
         backspaceTimeout = setTimeout(() => {
             clearCurrentRow();
-            backspaceTimeout = null; 
+            backspaceTimeout = null;
         }, 500);
     } else {
-        handleKeyInput(hitKey.textContent);
+        handleKeyInput(closestKey.textContent);
     }
 });
 
-// Attach the cancellation events to the container itself
+// 3. Attach the release listeners ONCE
 keyboardContainer.addEventListener('pointerup', cancelBackspace);
 keyboardContainer.addEventListener('pointerleave', cancelBackspace);
-});
 
 // Update bounds when the window resizes or device rotates
 window.addEventListener('resize', cacheKeyGeometries);
@@ -445,7 +442,7 @@ document.querySelectorAll('.board-row').forEach((row, rowIndex) => {
         tile.addEventListener('click', () => {
             // Only allow clicking in the active row
             if (rowIndex !== gameState.currentRow) return;
-            
+
             // Only allow selecting tiles that have a letter in them
             if (tileIndex >= gameState.currentGuess.length) return;
 
@@ -461,6 +458,7 @@ document.querySelectorAll('.board-row').forEach((row, rowIndex) => {
     });
 });
 
+/** 
 // --- Virtual Keyboard Input ---
 let backspaceTimeout = null;
 
@@ -486,16 +484,17 @@ document.querySelectorAll('.key').forEach(key => {
 
         key.addEventListener('pointerup', cancelBackspace);
         key.addEventListener('pointerleave', cancelBackspace);
-        
+
     } else {
         // Standard logic for all other keys
         key.addEventListener('pointerdown', (e) => {
-            e.preventDefault(); 
+            e.preventDefault();
             handleKeyInput(key.textContent.trim());
         });
     }
 });
 
+*/
 // Intercepts and kills double-clicks before the mobile browser can use them to zoom
 document.addEventListener('dblclick', (e) => {
     e.preventDefault();
@@ -519,6 +518,7 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
     startNewGame();
     toggleScreen('home-screen', false);
     toggleScreen('game-screen', true);
+    cacheKeyGeometries();
 });
 
 document.getElementById('board-return-menu-btn')?.addEventListener('click', async () => {
@@ -565,7 +565,7 @@ document.getElementById('open-player-modal-btn')?.addEventListener('click', () =
         searchInput.value = '';
         searchInput.dispatchEvent(new Event('input')); // Forces the grid to un-hide everyone
     }
-    
+
     toggleScreen('player-modal', true);
 });
 document.getElementById('close-player-x')?.addEventListener('click', () => {
@@ -643,7 +643,7 @@ document.getElementById('lose-menu-btn')?.addEventListener('click', (e) => {
 
 document.getElementById('stats-sort-select')?.addEventListener('change', () => {
     updatePlayerStatsUI(); // Instantly re-sorts and re-renders when they click an option
-    
+
     // Snap the table back to the left side
     const statsContainer = document.querySelector('.stats-container');
     if (statsContainer) {
@@ -660,7 +660,7 @@ document.getElementById('player-search-input')?.addEventListener('input', (e) =>
     buttons.forEach(btn => {
         // textContent cleanly grabs the username and ignores the HTML tags for the Shark icon
         const username = btn.textContent.toLowerCase();
-        
+
         if (username.includes(searchTerm)) {
             btn.classList.remove('hidden');
         } else {
