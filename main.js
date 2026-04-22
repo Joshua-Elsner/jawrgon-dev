@@ -343,13 +343,38 @@ async function handleLoss(isRestore = false) {
 // ==========================================
 
 // --- Virtual Keyboard Input ---
+let backspaceTimeout = null;
+
 document.querySelectorAll('.key').forEach(key => {
-    key.addEventListener('pointerdown', (e) => {
-        // Prevent the browser from firing a delayed 'click' or trying to drag the element
-        e.preventDefault(); 
+    if (key.id === 'key-backspace') {
+        // Long-press logic for backspace
+        key.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            backspaceTimeout = setTimeout(() => {
+                clearCurrentRow();
+                backspaceTimeout = null; // Reset so pointerup doesn't fire a single backspace
+            }, 500);
+        });
+
+        const cancelBackspace = (e) => {
+            e.preventDefault();
+            if (backspaceTimeout) {
+                clearTimeout(backspaceTimeout);
+                backspaceTimeout = null;
+                handleKeyInput('BACK'); // Timeout didn't finish, do a normal backspace
+            }
+        };
+
+        key.addEventListener('pointerup', cancelBackspace);
+        key.addEventListener('pointerleave', cancelBackspace);
         
-        handleKeyInput(key.textContent.trim());
-    });
+    } else {
+        // Standard logic for all other keys
+        key.addEventListener('pointerdown', (e) => {
+            e.preventDefault(); 
+            handleKeyInput(key.textContent.trim());
+        });
+    }
 });
 
 // Intercepts and kills double-clicks before the mobile browser can use them to zoom
