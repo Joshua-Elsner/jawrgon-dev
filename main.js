@@ -380,6 +380,29 @@ function cacheKeyGeometries() {
     });
 }
 
+const keyboardContainer = document.getElementById('keyboard');
+//let backspaceTimeout = null;
+
+keyboardContainer.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+
+    const x = e.clientX;
+    const y = e.clientY;
+
+    // Find the key whose bounding box contains the pointer coordinates
+    const hitKey = keyGeometries.find(geo => 
+        x >= geo.left && x <= geo.right && y >= geo.top && y <= geo.bottom
+    );
+
+    if (!hitKey) return; // User tapped dead space between keys
+
+    if (hitKey.id === 'key-backspace') {
+        // We will handle the backspace long-press in the next commit
+    } else {
+        handleKeyInput(hitKey.textContent);
+    }
+});
+
 // Update bounds when the window resizes or device rotates
 window.addEventListener('resize', cacheKeyGeometries);
 
