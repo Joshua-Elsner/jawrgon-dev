@@ -237,6 +237,8 @@ function restoreBoardUI() {
 // ==========================================
 
 function clearCurrentRow() {
+    clearSelection();
+
     while (gameState.currentTile > 0) {
         if (deleteLetterFromState()) {
             updateTileText(gameState.currentRow, gameState.currentTile, "");
