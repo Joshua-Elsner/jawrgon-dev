@@ -5,6 +5,9 @@
 import { VALID_WORDS } from './words.js';
 
 export const gameState = {
+
+    selectedTileIndex: null,
+
     // Database sync data
     secretWord: "",
     currentShark: "Loading...",
@@ -51,6 +54,7 @@ export function resetGameState() {
     gameState.currentGuess = "";
     gameState.isGameOver = false;
     gameState.submittedGuesses = [];
+    gameState.selectedTileIndex = null;
 }
 
 /**
@@ -264,4 +268,14 @@ export function loadBoardState() {
 export function clearBoardState() {
     localStorage.removeItem('jawrgon_board_state');
     gameState.submittedGuesses = [];
+}
+
+export function replaceLetterInState(letter) {
+    if (gameState.selectedTileIndex === null) return false;
+    
+    // Split, replace, and rejoin string
+    let guessArr = gameState.currentGuess.split('');
+    guessArr[gameState.selectedTileIndex] = letter;
+    gameState.currentGuess = guessArr.join('');
+    return true;
 }

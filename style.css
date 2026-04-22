@@ -3,6 +3,8 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-user-select: none; /* Safari/iOS */
+    user-select: none; /* Standard */
 }
 
 /*Color variables*/
@@ -31,6 +33,9 @@ body {
     padding: 0;
     height: 100dvh;
     overflow: hidden;
+    touch-action: manipulation;
+
+    -webkit-touch-callout: none;
 }
 
 button, .key {
@@ -123,6 +128,7 @@ h2 {
     padding: 10px 10px 2px 10px;
 
     margin-bottom: 0px;
+    touch-action: none;
 }
 
 .keyboard-row {
@@ -220,6 +226,9 @@ background-color: var(--color-absent) !important;
     border-radius: 6px;
     border: none;
     outline: none;
+
+    -webkit-user-select: auto; /* Safari/iOS */
+    user-select: auto; /* Standard */
 }
 
 #submit-new-word {
@@ -231,6 +240,7 @@ background-color: var(--color-absent) !important;
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
+
 }
 
 .lose-content {
@@ -274,11 +284,6 @@ background-color: var(--color-absent) !important;
     border-radius: 8px;
     cursor: pointer;
     font-weight: bold;
-}
-
-.menu-buttons button:hover {
-    background-color: var(--color-accent);
-    color: var(--color-background);
 }
 
 #game-screen {
@@ -384,11 +389,6 @@ background-color: var(--color-absent) !important;
     font-weight: bold;
 }
 
-.menu-return-btn:hover {
-    background-color: var(--color-accent);
-    color: var(--color-background);
-}
-
 .key.absent {
     background-color: #1e293b !important;
     color: #475569 !important;
@@ -412,10 +412,6 @@ background-color: var(--color-absent) !important;
     line-height: 1;
     user-select: none;
     transition: color 0.2s ease;
-}
-
-.close-modal-x:hover {
-    color: var(--color-accent);
 }
 
 #player-modal {
@@ -443,11 +439,6 @@ background-color: var(--color-absent) !important;
     transition: all 0.2s ease;
 }
 
-.player-grid button:hover {
-    background-color: var(--color-accent);
-    color: var(--color-background);
-}
-
 #new-player-input {
     width: 100%;
     padding: 10px;
@@ -458,6 +449,8 @@ background-color: var(--color-absent) !important;
     outline: none;
     background-color: var(--color-background);
     color: var(--color-text);
+    -webkit-user-select: auto; /* Safari/iOS */
+    user-select: auto; /* Standard */
 }
 
 #create-player-btn {
@@ -510,23 +503,12 @@ background-color: var(--color-absent) !important;
     transition: all 0.2s ease;
 }
 
-.secondary-modal-btn:hover {
-    color: var(--color-text);
-    border-color: var(--color-text);
-    background-color: rgba(125, 211, 252, 0.1); 
-}
-
 /* Disabled Button State */
 button:disabled {
     background-color: #1e293b !important;
     color: #475569 !important;
     border-color: #1e293b !important;
     cursor: not-allowed !important;
-}
-
-button:disabled:hover {
-    background-color: #1e293b !important;
-    color: #475569 !important;
 }
 
 #close-how-to-play-btn {
@@ -561,11 +543,6 @@ button:disabled:hover {
     text-transform: uppercase;
     font-weight: bold;
     transition: all 0.2s ease;
-}
-
-.suggestion-btn:hover {
-    background-color: var(--color-present);
-    color: var(--color-background);
 }
 
 #toast-container {
@@ -661,32 +638,6 @@ button:disabled:hover {
     transition: all 0.2s ease;
 }
 
-.circle-btn:hover {
-    background-color: var(--color-accent);
-    color: var(--color-background);
-    transform: scale(1.05);
-}
-
-/* Discord Menu Button Styles */
-#discord-menu-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px; /* Space between logo and text */
-    background-color: #5865F2 !important; /* !important forces it to ignore the default button color */
-    color: white !important;
-    border: none;
-    margin-top: 0; 
-}
-
-#discord-menu-btn:hover {
-    background-color: #4752C4 !important; /* Darker Blurple for hover state */
-}
-
-.discord-btn:active {
-    transform: translateY(0px); /* Pushes down when clicked */
-}
-
 .toast-highlight {
     color: #ff4444;
     font-weight: 900;
@@ -753,11 +704,6 @@ button:disabled:hover {
     cursor: pointer;
     font-weight: bold;
     transition: all 0.2s ease;
-}
-
-.stats-return-btn:hover {
-    background-color: var(--color-stats-theme);
-    color: var(--color-background);
 }
 
 #stats-sort-select {
@@ -861,4 +807,62 @@ button:disabled:hover {
 
 #player-stats-table td:first-child {
     box-shadow: inset -2px 0 0 var(--color-stats-theme);
+}
+
+/* ==========================================
+   HOVER STATES (Mouse/Trackpad Only)
+   ========================================== */
+@media (hover: hover) {
+    
+    .menu-buttons button:hover {
+        background-color: var(--color-accent);
+        color: var(--color-background);
+    }
+
+    .menu-return-btn:hover {
+        background-color: var(--color-accent);
+        color: var(--color-background);
+    }
+
+    .stats-return-btn:hover {
+        background-color: var(--color-stats-theme);
+        color: var(--color-background);
+    }
+
+    .close-modal-x:hover {
+        color: var(--color-accent);
+    }
+
+    .player-grid button:hover {
+        background-color: var(--color-accent);
+        color: var(--color-background);
+    }
+
+    .secondary-modal-btn:hover {
+        color: var(--color-text);
+        border-color: var(--color-text);
+        background-color: rgba(125, 211, 252, 0.1);
+    }
+
+    .suggestion-btn:hover {
+        background-color: var(--color-present);
+        color: var(--color-background);
+    }
+
+    .circle-btn:hover {
+        background-color: var(--color-accent);
+        color: var(--color-background);
+        transform: scale(1.05);
+    }
+
+    button:disabled:hover {
+        background-color: #1e293b !important;
+        color: #475569 !important;
+    }
+}
+
+.tile.selected {
+    border: 3px solid var(--color-text);
+    box-shadow: 0 0 10px var(--color-text);
+    transform: scale(1.05);
 }

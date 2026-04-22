@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="style.css">
     <title>JAWRGON!</title>
 </head>
@@ -198,24 +198,6 @@
         </section>
         <section id="keyboard" style="position: relative;">
 
-            <div class="keyboard-row"
-                style="position: absolute; top: -56px; left: 10px; right: 10px; height: 58px; pointer-events: none;">
-                <div style="flex: 1; visibility: hidden;"></div>
-                <div style="flex: 1; visibility: hidden;"></div>
-                <div style="flex: 1; visibility: hidden;"></div>
-                <div style="flex: 1; visibility: hidden;"></div>
-                <div style="flex: 1; visibility: hidden;"></div>
-                <div style="flex: 1; visibility: hidden;"></div>
-                <div style="flex: 1; visibility: hidden;"></div>
-                <div style="flex: 1; visibility: hidden;"></div>
-                <div style="flex: 1; visibility: hidden;"></div>
-
-                <div class="key" id="key-clear" style="flex: 1; pointer-events: auto;">
-                    <span
-                        style="transform: rotate(-45deg); display: block; font-size: 0.7rem; letter-spacing: 1px;">CLEAR</span>
-                </div>
-            </div>
-
             <div class="keyboard-row">
                 <div class="key" id="key-q">Q</div>
                 <div class="key" id="key-w">W</div>
@@ -256,6 +238,8 @@
     </div>
 
     <div id="leaderboard-screen" class="hidden">
+        <h2 id="leaderboard-week-display" style="margin-top: -15px; margin-bottom: 0px; color: #888;"></h2>
+
         <h1>Leaderboard</h1>
 
         <h3 id="leaderboard-shark-display" class="shark-display"></h3>
