@@ -396,11 +396,39 @@ keyboardContainer.addEventListener('pointerdown', (e) => {
 
     if (!hitKey) return; // User tapped dead space between keys
 
+    const cancelBackspace = (e) => {
+    e.preventDefault();
+    if (backspaceTimeout) {
+        clearTimeout(backspaceTimeout);
+        backspaceTimeout = null;
+        handleKeyInput('BACK'); // Timeout didn't finish, do a normal backspace
+    }
+};
+
+keyboardContainer.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    const x = e.clientX;
+    const y = e.clientY;
+
+    const hitKey = keyGeometries.find(geo => 
+        x >= geo.left && x <= geo.right && y >= geo.top && y <= geo.bottom
+    );
+
+    if (!hitKey) return;
+
     if (hitKey.id === 'key-backspace') {
-        // We will handle the backspace long-press in the next commit
+        backspaceTimeout = setTimeout(() => {
+            clearCurrentRow();
+            backspaceTimeout = null; 
+        }, 500);
     } else {
         handleKeyInput(hitKey.textContent);
     }
+});
+
+// Attach the cancellation events to the container itself
+keyboardContainer.addEventListener('pointerup', cancelBackspace);
+keyboardContainer.addEventListener('pointerleave', cancelBackspace);
 });
 
 // Update bounds when the window resizes or device rotates
