@@ -70,7 +70,7 @@ export function resetBoardUI() {
         for (let c = 0; c < 5; c++) {
             const tile = rows[r].children[c];
             tile.textContent = "";
-            tile.classList.remove('correct', 'present', 'absent');
+            tile.classList.remove('correct', 'present', 'absent', 'selected');
         }
     }
 

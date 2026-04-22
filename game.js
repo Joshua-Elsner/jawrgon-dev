@@ -54,6 +54,7 @@ export function resetGameState() {
     gameState.currentGuess = "";
     gameState.isGameOver = false;
     gameState.submittedGuesses = [];
+    gameState.selectedTileIndex = null;
 }
 
 /**
