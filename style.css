@@ -679,26 +679,6 @@ button:disabled:hover {
     transform: scale(1.05);
 }
 
-/* Discord Menu Button Styles */
-#discord-menu-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px; /* Space between logo and text */
-    background-color: #5865F2 !important; /* !important forces it to ignore the default button color */
-    color: white !important;
-    border: none;
-    margin-top: 0; 
-}
-
-#discord-menu-btn:hover {
-    background-color: #4752C4 !important; /* Darker Blurple for hover state */
-}
-
-.discord-btn:active {
-    transform: translateY(0px); /* Pushes down when clicked */
-}
-
 .toast-highlight {
     color: #ff4444;
     font-weight: 900;
