@@ -411,10 +411,10 @@ export function showWeeklyRecap(recapData) {
     // PAGE 2: Special Awards
     // ==========================================
     const awards = [
-        { data: recapData.jawbreaker, title: "🥊 Jawbreaker", desc: "Most Words Solved" },
-        { data: recapData.robster, title: "🦞 Robster", desc: "Most Yoinks" },
-        { data: recapData.apex, title: "🦈 Apex Predator", desc: "Most Fish Eaten" },
-        { data: recapData.efishent, title: "🧠 E-fish-ent", desc: "Lowest Avg Guesses" }
+        { data: recapData.jawbreaker, title: "Jawbreaker", desc: "Most Words Solved", img: "Jawbreaker.png" },
+        { data: recapData.robster, title: "Robster", desc: "Most Yoinks", img: "Robster.png" },
+        { data: recapData.apex, title: "Apex Predator", desc: "Most Fish Eaten", img: "ApexPredator.png" },
+        { data: recapData.efishent, title: "E-fish-ent", desc: "Lowest Avg Guesses", img: "E-Fish-Ent.png" }
     ];
 
     awards.forEach(award => {
