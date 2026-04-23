@@ -380,7 +380,7 @@ export function showWeeklyRecap(recapData) {
 
     // Initialize two separate wrapper divs for pagination
     let page1HTML = `<div id="recap-page-1" style="display: flex; flex-direction: column; gap: 12px;">`;
-    let page2HTML = `<div id="recap-page-2" class="hidden" style="display: flex; flex-direction: column; gap: 12px;">`;
+    let page2HTML = `<div id="recap-page-2" class="hidden" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">`;
 
     // ==========================================
     // PAGE 1: The Podium (Top 3)
