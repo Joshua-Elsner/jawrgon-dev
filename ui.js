@@ -209,6 +209,29 @@ export function animateSharkChomp() {
     }, 750));
 }
 
+// Keep track of timeouts for the fish
+let fishAnimationTimeouts = [];
+
+/**
+ * Swaps the fish image to surprised for 1 second.
+ */
+export function animateFishSurprise() {
+    const boardFish = document.getElementById('board-fish');
+    if (!boardFish) return;
+
+    // Clear any ongoing animations if the player guesses rapidly
+    fishAnimationTimeouts.forEach(clearTimeout);
+    fishAnimationTimeouts = [];
+
+    // Swap to fish_surprised.png immediately
+    boardFish.src = 'fish_surprised.png';
+
+    // 1.0 seconds: back to normal
+    fishAnimationTimeouts.push(setTimeout(() => {
+        boardFish.src = 'fish.png';
+    }, 1000));
+}
+
 /**
  * Adjusts the main menu Start button based on who is playing.
  */
