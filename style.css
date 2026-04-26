@@ -866,3 +866,11 @@ button:disabled {
     box-shadow: 0 0 10px var(--color-text);
     transform: scale(1.05);
 }
+
+@keyframes spinFast {
+    100% { transform: rotate(360deg); }
+}
+
+.spin-fast {
+    animation: spinFast 0.2s linear infinite !important;
+}
