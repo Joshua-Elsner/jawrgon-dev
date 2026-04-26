@@ -85,6 +85,7 @@ export function resetBoardUI() {
         fishContainer.style.transition = '';
         fishContainer.style.transform = '';
         boardFish.src = 'fish.png';
+        boardFish.classList.remove('spin-fast');
     }
 }
 
@@ -303,6 +304,65 @@ export function animateFishVictory() {
     setTimeout(() => {
         fish.src = 'fish_victory.png';
     }, 600);
+}
+
+/**
+ * Executes the elaborate Yoink sequence with the Robster, spinning Fish, and defeated Shark.
+ */
+export function animateYoinkSequence(yoinkerName) {
+    const robsterContainer = document.getElementById('robster-container');
+    const robsterName = document.getElementById('robster-name');
+    const fishContainer = document.getElementById('fish-container');
+    const fish = document.getElementById('board-fish');
+    const sharkContainer = document.getElementById('shark-container');
+    const topShark = document.getElementById('top-shark');
+
+    if (!robsterContainer || !fish || !topShark) return;
+
+    // 1. Setup Robster at the same Y-level as the fish
+    robsterName.textContent = yoinkerName;
+    robsterContainer.classList.remove('hidden');
+    
+    const fishRect = fishContainer.getBoundingClientRect();
+    robsterContainer.style.top = `${fishRect.top}px`;
+    robsterContainer.style.left = '-150px';
+    robsterContainer.style.transition = 'none';
+
+    // 2. Setup Fish (Surprised & Spinning)
+    fish.src = 'fish_surprised.png';
+    fish.classList.add('spin-fast');
+    
+    // Ensure the fish gets pulled gracefully down to the start position
+    fishContainer.style.transition = 'transform 1.5s ease-in-out';
+    fishContainer.style.transform = 'translate(0px, 0px)';
+
+    // 3. Setup Shark (Defeat)
+    stopSharkDefeatAnimation(); // Clear any existing loops
+    topShark.src = 'shark_defeat_1.png';
+    sharkContainer.style.transition = 'transform 0.5s ease-in';
+
+    // 4. Execute Movements
+    requestAnimationFrame(() => {
+        // Fly Robster across the entire width of the screen
+        robsterContainer.style.transition = 'left 0.8s linear';
+        robsterContainer.style.left = `${window.innerWidth + 50}px`;
+    });
+
+    // 1 sec: Shark is pulled upwards out of view
+    setTimeout(() => {
+        sharkContainer.style.transform = 'translateY(-200px)';
+    }, 1000);
+
+    // 1.5 sec: Shark drops back down, Fish resets, Robster hides
+    setTimeout(() => {
+        topShark.src = 'shark.png';
+        sharkContainer.style.transition = 'transform 0.5s ease-out';
+        sharkContainer.style.transform = 'translateY(0)';
+        
+        fish.classList.remove('spin-fast');
+        fish.src = 'fish.png';
+        robsterContainer.classList.add('hidden');
+    }, 1500);
 }
 
 /**
