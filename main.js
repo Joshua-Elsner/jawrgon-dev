@@ -26,7 +26,8 @@ import {
     setWeekEndingDate, setStartButtonLoading, setPlayerGridLoading,
     setLeaderboardLoading, setStatsLoading, setSuggestionsLoading,
     showWeeklyRecap, escapeHTML, animateSharkChomp, animateFishSurprise,
-    stopSharkDefeatAnimation, startSharkDefeatAnimation, animateFishVictory
+    stopSharkDefeatAnimation, startSharkDefeatAnimation, animateFishVictory,
+    animateYoinkSequence
 } from './ui.js';
 
 // ==========================================
@@ -72,7 +73,13 @@ async function init() {
                         recordYoink(gameState.currentSharkId);
                         sendYoinkBroadcast(gameState.currentSharkId, gameState.currentPlayer);
 
-                        startNewGame();
+                        // Trigger the sequence!
+                        animateYoinkSequence(gameState.currentShark);
+
+                        // Delay the board reset so the animation can finish
+                        setTimeout(() => {
+                            startNewGame();
+                        }, 1500); 
                     }
                 }
             },
