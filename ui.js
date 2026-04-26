@@ -176,6 +176,39 @@ export function updateSharkDisplay(currentSharkName, currentPlayerName, secretWo
     if (statsDisplay) statsDisplay.innerHTML = displayText;
 }
 
+// Keep track of timeouts so rapid guesses don't break the animation loop
+let sharkAnimationTimeouts = [];
+
+/**
+ * Swaps the shark image back and forth for incorrect guesses.
+ */
+export function animateSharkChomp() {
+    const topShark = document.getElementById('top-shark');
+    if (!topShark) return;
+
+    // Clear any ongoing animations if the player guesses rapidly
+    sharkAnimationTimeouts.forEach(clearTimeout);
+    sharkAnimationTimeouts = [];
+
+    // Swap to shark2.png immediately
+    topShark.src = 'shark2.png';
+
+    // 0.25 seconds: back to normal
+    sharkAnimationTimeouts.push(setTimeout(() => {
+        topShark.src = 'shark.png';
+    }, 250));
+
+    // 0.5 seconds: back to shark2
+    sharkAnimationTimeouts.push(setTimeout(() => {
+        topShark.src = 'shark2.png';
+    }, 500));
+
+    // 0.75 seconds: settle back to normal
+    sharkAnimationTimeouts.push(setTimeout(() => {
+        topShark.src = 'shark.png';
+    }, 750));
+}
+
 /**
  * Adjusts the main menu Start button based on who is playing.
  */
