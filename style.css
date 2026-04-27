@@ -894,14 +894,26 @@ button:disabled {
     object-fit: contain; 
 }
 
-#title-fish {
-    /* scale(1.2) makes it 20% larger. scale(1.5) would be 50% larger. */
-    transform: scale(1.2); 
+#title-shark {
+    /* Uses the same 4s timing as your in-game shark */
+    animation: titleSharkBob 4s ease-in-out infinite alternate;
 }
 
-#title-shark {
-    /* translateY(-15px) pulls the image 15 pixels UP. Positive numbers push it down. */
-    transform: translateY(-10px); 
+#title-fish {
+    /* Uses the same 2.5s timing as your in-game fish */
+    animation: titleFishBob 2.5s ease-in-out infinite;
+}
+
+/* Bakes in the -15px nudge, and bobs up another 4px */
+@keyframes titleSharkBob {
+    0%, 100% { transform: translateY(-15px); }
+    50% { transform: translateY(-19px); }
+}
+
+/* Bakes in the 1.2 scale and -5px nudge, and bobs up another 4px */
+@keyframes titleFishBob {
+    0%, 100% { transform: scale(1.2) translateY(-5px); }
+    50% { transform: scale(1.2) translateY(-9px); }
 }
 
 #robster-easter-egg {
