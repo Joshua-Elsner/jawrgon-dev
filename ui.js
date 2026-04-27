@@ -882,7 +882,7 @@ export function escapeHTML(str) {
  * Rolls a 1/20 chance to trigger the Robster peek easter egg.
  */
 export function triggerRobsterEasterEgg() {
-    if (Math.random() < 1.05) { // 5% chance
+    if (Math.random() < 0.02) { // 2% chance
         const robster = document.getElementById('robster-easter-egg');
         if (!robster) return;
         
