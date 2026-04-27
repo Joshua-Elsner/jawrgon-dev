@@ -112,6 +112,10 @@
         </div>
     </div>
     <div id="home-screen">
+        <div class="title-images-container">
+            <img src="title_page_shark.png" alt="Shark" class="title-image" id="title-shark">
+            <img src="title_page_fish.png" alt="Fish" class="title-image" id="title-fish">
+        </div>
         <h1>JAWRGON!</h1>
         <h2>Try to guess the secret word in 6 attempts max!</h2>
         <h3 id="home-shark-display" class="shark-display">Current Shark: Loading...</h3>
@@ -138,11 +142,16 @@
             </svg>
         </button>
 
+        <div id="robster-container" class="hidden"
+            style="position: fixed; left: -150px; z-index: 100; display: flex; flex-direction: column; align-items: center;">
+            <img src="Robster2.png" alt="Robster" style="width: 90px;">
+            <div id="robster-name" class="sprite-name">Yoinker</div>
+        </div>
+
         <div id="shark-container">
             <img id="top-shark" src="shark.png" alt="Shark">
             <div id="shark-name-display" class="sprite-name">Loading...</div>
         </div>
-
         <section id="game-board">
             <div id="fish-container">
                 <div id="fish-name-display" class="sprite-name">Guest</div>
@@ -299,6 +308,7 @@
         <button id="stats-back-to-menu-btn" class="stats-return-btn">Back to Menu</button>
     </div>
     <script type="module" src="main.js"></script>
+    <img id="robster-easter-egg" src="Robster2.png" alt="Robster" class="hidden">
 </body>
 
 </html>

@@ -6,6 +6,7 @@ const supabaseUrl = 'https://fwizxuvhitnnnxoyulun.supabase.co';
 const supabaseKey = 'sb_publishable_c9nfqIrxrqzGtrku1IS-dg_7AtSPP_A';
 
 
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 let gameEventsChannel;

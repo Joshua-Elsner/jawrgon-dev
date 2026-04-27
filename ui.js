@@ -56,7 +56,7 @@ export function showToast(message, duration = 2500) {
 /**
  * Completely resets the game board bubbles and keyboard colors for a new game.
  */
-export function resetBoardUI() {
+export function resetBoardUI(preserveFish = false) {
     // Reset all rows and tiles
     for (let r = 0; r < 6; r++) {
         // Only the first row should be visible at the start
@@ -77,6 +77,19 @@ export function resetBoardUI() {
     // Clear all colors from the virtual keyboard
     keys.forEach(key => key.classList.remove('correct', 'present', 'absent'));
     updateGuessCounter(0);
+
+    // --- ONLY RESET FISH IF FLAG IS FALSE ---
+    if (!preserveFish) {
+        const fishContainer = document.getElementById('fish-container');
+        const boardFish = document.getElementById('board-fish');
+        if (fishContainer && boardFish) {
+            fishContainer.style.animation = '';
+            fishContainer.style.transition = '';
+            fishContainer.style.transform = '';
+            boardFish.src = 'fish.png';
+            boardFish.classList.remove('spin-fast'); 
+        }
+    }
 }
 
 /**
@@ -174,6 +187,184 @@ export function updateSharkDisplay(currentSharkName, currentPlayerName, secretWo
     
     // 2. Inject the text into the new stats screen element
     if (statsDisplay) statsDisplay.innerHTML = displayText;
+}
+
+// Keep track of timeouts so rapid guesses don't break the animation loop
+let sharkAnimationTimeouts = [];
+
+/**
+ * Swaps the shark image back and forth for incorrect guesses.
+ */
+export function animateSharkChomp() {
+    const topShark = document.getElementById('top-shark');
+    if (!topShark) return;
+
+    // Clear any ongoing animations if the player guesses rapidly
+    sharkAnimationTimeouts.forEach(clearTimeout);
+    sharkAnimationTimeouts = [];
+
+    // Swap to shark2.png immediately
+    topShark.src = 'shark2.png';
+
+    // 0.25 seconds: back to normal
+    sharkAnimationTimeouts.push(setTimeout(() => {
+        topShark.src = 'shark.png';
+    }, 250));
+
+    // 0.5 seconds: back to shark2
+    sharkAnimationTimeouts.push(setTimeout(() => {
+        topShark.src = 'shark2.png';
+    }, 500));
+
+    // 0.75 seconds: settle back to normal
+    sharkAnimationTimeouts.push(setTimeout(() => {
+        topShark.src = 'shark.png';
+    }, 750));
+}
+
+// Keep track of timeouts for the fish
+let fishAnimationTimeouts = [];
+
+/**
+ * Swaps the fish image to surprised for 1 second.
+ */
+export function animateFishSurprise() {
+    const boardFish = document.getElementById('board-fish');
+    if (!boardFish) return;
+
+    // Clear any ongoing animations if the player guesses rapidly
+    fishAnimationTimeouts.forEach(clearTimeout);
+    fishAnimationTimeouts = [];
+
+    // Swap to fish_surprised.png immediately
+    boardFish.src = 'fish_surprised.png';
+
+    // 1.0 seconds: back to normal
+    fishAnimationTimeouts.push(setTimeout(() => {
+        boardFish.src = 'fish.png';
+    }, 1000));
+}
+
+// Keep track of the active defeat interval
+let defeatInterval = null;
+
+/**
+ * Starts the alternating defeat animation loop.
+ */
+export function startSharkDefeatAnimation() {
+    const topShark = document.getElementById('top-shark');
+    if (!topShark) return;
+
+    // Clear any existing intervals just to be safe
+    stopSharkDefeatAnimation();
+
+    let isDefeat1 = true;
+    topShark.src = 'shark_defeat_1.png'; // Set immediately
+
+    defeatInterval = setInterval(() => {
+        isDefeat1 = !isDefeat1;
+        topShark.src = isDefeat1 ? 'shark_defeat_1.png' : 'shark_defeat_2.png';
+    }, 1000);
+}
+
+/**
+ * Stops the defeat loop and resets the shark.
+ */
+export function stopSharkDefeatAnimation() {
+    if (defeatInterval) {
+        clearInterval(defeatInterval);
+        defeatInterval = null;
+    }
+    const topShark = document.getElementById('top-shark');
+    if (topShark) {
+        topShark.src = 'shark.png'; // Reset to default
+    }
+}
+
+/**
+ * Flies the fish to the top right and swaps to the victory sprite.
+ */
+export function animateFishVictory() {
+    const container = document.getElementById('fish-container');
+    const fish = document.getElementById('board-fish');
+    if (!container || !fish) return;
+
+    // Calculate distance to the top right (with a 20px padding)
+    const rect = container.getBoundingClientRect();
+    const moveX = window.innerWidth - rect.right - 20;
+    const moveY = -(rect.top - 20);
+
+    // 1. Stop the floating animation first
+    container.style.animation = 'none';
+
+    // 2. Wait exactly one frame so the browser registers the stop, THEN fly!
+    requestAnimationFrame(() => {
+        container.style.transition = 'transform 0.6s ease-out';
+        container.style.transform = `translate(${moveX}px, ${moveY}px)`;
+    });
+
+    // Swap the image right as it arrives (600ms)
+    setTimeout(() => {
+        fish.src = 'fish_victory.png';
+    }, 600);
+}
+
+/**
+ * Executes the elaborate Yoink sequence with the Robster, spinning Fish, and defeated Shark.
+ */
+export function animateYoinkSequence(yoinkerName) {
+    const robsterContainer = document.getElementById('robster-container');
+    const robsterName = document.getElementById('robster-name');
+    const fishContainer = document.getElementById('fish-container');
+    const fish = document.getElementById('board-fish');
+    const sharkContainer = document.getElementById('shark-container');
+    const topShark = document.getElementById('top-shark'); // Kept for reference if needed
+
+    if (!robsterContainer || !fish || !topShark) return;
+
+    // 1. Setup Robster at the same Y-level as the fish
+    robsterName.textContent = yoinkerName;
+    robsterContainer.classList.remove('hidden');
+    
+    const fishRect = fishContainer.getBoundingClientRect();
+    robsterContainer.style.top = `${fishRect.top}px`;
+    robsterContainer.style.left = '-150px';
+    robsterContainer.style.transition = 'none';
+
+    // 2. Setup Fish (Spinning but NO image swap)
+    // Ensure the fish gets pulled gracefully down to the start position
+    fishContainer.style.transition = 'transform 1.5s ease-in-out';
+    fishContainer.style.transform = 'translate(0px, 0px)';
+
+    // 3. Setup Shark (Movement but NO image swap)
+    stopSharkDefeatAnimation(); // Clear any existing loops just in case
+    sharkContainer.style.transition = 'transform 0.5s ease-in';
+
+    // 4. Execute Movements
+    requestAnimationFrame(() => {
+        // Fly Robster across the entire width of the screen
+        robsterContainer.style.transition = 'left 0.8s linear';
+        robsterContainer.style.left = `${window.innerWidth + 50}px`;
+    });
+
+    // 400ms is the exact moment Robster hits the center
+    setTimeout(() => {
+        fish.classList.add('spin-fast');
+    }, 400);
+
+    // 1 sec: Shark is pulled upwards out of view
+    setTimeout(() => {
+        sharkContainer.style.transform = 'translateY(-200px)';
+    }, 1000);
+
+    // 1.5 sec: Shark drops back down, Fish stops spinning, Robster hides
+    setTimeout(() => {
+        sharkContainer.style.transition = 'transform 0.5s ease-out';
+        sharkContainer.style.transform = 'translateY(0)';
+        
+        fish.classList.remove('spin-fast');
+        robsterContainer.classList.add('hidden');
+    }, 1500);
 }
 
 /**
@@ -380,7 +571,7 @@ export function showWeeklyRecap(recapData) {
 
     // Initialize two separate wrapper divs for pagination
     let page1HTML = `<div id="recap-page-1" style="display: flex; flex-direction: column; gap: 12px;">`;
-    let page2HTML = `<div id="recap-page-2" class="hidden" style="display: flex; flex-direction: column; gap: 12px;">`;
+    let page2HTML = `<div id="recap-page-2" class="hidden" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">`;
 
     // ==========================================
     // PAGE 1: The Podium (Top 3)
@@ -411,23 +602,31 @@ export function showWeeklyRecap(recapData) {
     // PAGE 2: Special Awards
     // ==========================================
     const awards = [
-        { data: recapData.jawbreaker, title: "🥊 Jawbreaker", desc: "Most Words Solved" },
-        { data: recapData.robster, title: "🦞 Robster", desc: "Most Yoinks" },
-        { data: recapData.apex, title: "🦈 Apex Predator", desc: "Most Fish Eaten" },
-        { data: recapData.efishent, title: "🧠 E-fish-ent", desc: "Lowest Avg Guesses" }
+        { data: recapData.jawbreaker, title: "Jawbreaker", desc: "Most Words Solved", img: "Jawbreaker.png" },
+        { data: recapData.robster, title: "Robster", desc: "Most Yoinks", img: "Robster2.png" },
+        { data: recapData.apex, title: "Apex Predator", desc: "Most Fish Eaten", img: "ApexPredator.png" },
+        { data: recapData.efishent, title: "E-fish-ent", desc: "Lowest Avg Guesses", img: "E-Fish-Ent.png" }
     ];
 
     awards.forEach(award => {
         if (award.data && award.data.players) {
             page2HTML += `
-                <div style="background-color: rgba(125, 211, 252, 0.1); padding: 10px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
-                    <div>
-                        <div style="color: var(--color-text); font-weight: bold; font-size: 0.85rem; text-transform: uppercase;">${award.title}</div>
-                        <div style="font-size: 0.75rem; color: #888;">${award.desc}</div>
+                <div style="background-color: rgba(125, 211, 252, 0.1); padding: 15px 10px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; height: 100%;">
+                    
+                    <img src="${award.img}" alt="${award.title}" style="width: 70px; height: 70px; object-fit: contain; margin-bottom: 10px; transform: scale(1.6);">
+                    
+                    <div style="color: var(--color-text); font-weight: bold; font-size: 0.9rem; text-transform: uppercase;">
+                        ${award.title}
                     </div>
-                    <div style="font-size: 1.1rem; color: white;">
+                    
+                    <div style="font-size: 0.75rem; color: #888; margin-bottom: 12px;">
+                        ${award.desc}
+                    </div>
+                    
+                    <div style="font-size: 1.1rem; color: white; margin-top: auto; font-weight: bold;">
                         ${award.data.players.username}
                     </div>
+                    
                 </div>
             `;
         }
@@ -677,4 +876,23 @@ export function escapeHTML(str) {
         "'": '&#39;',
         '"': '&quot;'
     }[tag]));
+}
+
+/**
+ * Rolls a 1/20 chance to trigger the Robster peek easter egg.
+ */
+export function triggerRobsterEasterEgg() {
+    if (Math.random() < 0.02) { // 2% chance
+        const robster = document.getElementById('robster-easter-egg');
+        if (!robster) return;
+        
+        robster.classList.remove('hidden');
+        robster.classList.add('robster-peek');
+        
+        // Clean up the classes after the 3s animation finishes
+        setTimeout(() => {
+            robster.classList.remove('robster-peek');
+            robster.classList.add('hidden');
+        }, 3050); // 50ms buffer to ensure smooth removal
+    }
 }

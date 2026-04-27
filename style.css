@@ -866,3 +866,73 @@ button:disabled {
     box-shadow: 0 0 10px var(--color-text);
     transform: scale(1.05);
 }
+
+@keyframes spinFast {
+    100% { transform: rotate(360deg); }
+}
+
+.spin-fast {
+    animation: spinFast 0.2s linear infinite !important;
+}
+
+.title-images-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px; /* Space between the shark and fish */
+    margin-bottom: 10px; /* Space before the JAWRGON! title */
+}
+
+.title-image {
+    /* Limits the height so it never takes up more than 15% of the screen */
+    max-height: 15vh; 
+    
+    /* Fallback width so they don't blow up on ultra-tall screens */
+    max-width: 120px; 
+    
+    /* Keeps the image aspect ratio from squishing */
+    object-fit: contain; 
+}
+
+#title-shark {
+    /* Uses the same 4s timing as your in-game shark */
+    animation: titleSharkBob 4s ease-in-out infinite alternate;
+}
+
+#title-fish {
+    /* Uses the same 2.5s timing as your in-game fish */
+    animation: titleFishBob 2.5s ease-in-out infinite;
+}
+
+/* Bakes in the -15px nudge, and bobs up another 4px */
+@keyframes titleSharkBob {
+    0%, 100% { transform: translateY(-15px); }
+    50% { transform: translateY(-19px); }
+}
+
+/* Bakes in the 1.2 scale and -5px nudge, and bobs up another 4px */
+@keyframes titleFishBob {
+    0%, 100% { transform: scale(1.2) translateY(-5px); }
+    50% { transform: scale(1.2) translateY(-9px); }
+}
+
+#robster-easter-egg {
+    position: fixed;
+    top: 50%;
+    left: -100px; /* Start entirely off-screen */
+    width: 100px;
+    z-index: 1000;
+    transform: translateY(-50%) rotate(15deg); /* Tilted right */
+    pointer-events: none; /* Prevents blocking clicks */
+}
+
+.robster-peek {
+    /* 3s total duration */
+    animation: peekAndHide 3s ease-out forwards;
+}
+
+@keyframes peekAndHide {
+    0% { left: -30px; } /* Starts already peeked */
+    33.3% { left: -30px; } /* Holds position for 1 second */
+    100% { left: -100px; } /* Slowly retreats over 2 seconds */
+}
