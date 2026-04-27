@@ -27,7 +27,7 @@ import {
     setLeaderboardLoading, setStatsLoading, setSuggestionsLoading,
     showWeeklyRecap, escapeHTML, animateSharkChomp, animateFishSurprise,
     stopSharkDefeatAnimation, startSharkDefeatAnimation, animateFishVictory,
-    animateYoinkSequence
+    animateYoinkSequence, triggerRobsterEasterEgg
 } from './ui.js';
 
 // ==========================================
@@ -570,6 +570,7 @@ document.getElementById('leaderboard-btn').addEventListener('click', () => {
     loadLeaderboard();
     toggleScreen('home-screen', false);
     toggleScreen('leaderboard-screen', true);
+    triggerRobsterEasterEgg();
 });
 
 document.getElementById('player-stats-btn')?.addEventListener('click', () => {
@@ -711,6 +712,7 @@ document.getElementById('lose-leaderboard-btn')?.addEventListener('click', () =>
     loadLeaderboard();
 
     toggleScreen('leaderboard-screen', true);
+    triggerRobsterEasterEgg();
     clearBoardState();
     startNewGame();
 });
@@ -802,6 +804,7 @@ document.getElementById('submit-new-word')?.addEventListener('click', async () =
 
         await loadLeaderboard();
         toggleScreen('leaderboard-screen', true);
+        triggerRobsterEasterEgg();
         startNewGame();
 
     } catch (error) {
